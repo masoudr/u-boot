@@ -1,14 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
  *
  * Shengzhou Liu <Shengzhou.Liu@freescale.com>
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <fdt_support.h>
-#include <net.h>
 #include <netdev.h>
 #include <asm/mmu.h>
 #include <asm/processor.h>
@@ -25,7 +24,7 @@
 #include <fsl_dtsec.h>
 #include <asm/fsl_serdes.h>
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 #if defined(CONFIG_FMAN_ENET)
 	int i, interface;
@@ -76,9 +75,6 @@ int board_eth_init(struct bd_info *bis)
 		interface = fm_info_get_enet_if(i);
 		switch (interface) {
 		case PHY_INTERFACE_MODE_RGMII:
-		case PHY_INTERFACE_MODE_RGMII_TXID:
-		case PHY_INTERFACE_MODE_RGMII_RXID:
-		case PHY_INTERFACE_MODE_RGMII_ID:
 			dev = miiphy_get_dev_by_name(DEFAULT_FM_MDIO_NAME);
 			fm_info_set_mdio(i, dev);
 			break;

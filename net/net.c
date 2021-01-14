@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  *	Copied from Linux Monitor (LiMon) - Networking.
  *
@@ -7,6 +6,7 @@
  *	Copyright 2000 Roland Borde
  *	Copyright 2000 Paolo Scaffardi
  *	Copyright 2000-2002 Wolfgang Denk, wd@denx.de
+ *	SPDX-License-Identifier:	GPL-2.0
  */
 
 /*
@@ -72,31 +72,22 @@
  *	We want:	- load the boot file
  *	Next step:	none
  *
- *
- * WOL:
+ * SNTP:
  *
  *	Prerequisites:	- own ethernet address
- *	We want:	- magic packet or timeout
+ *			- own IP address
+ *	We want:	- network time
  *	Next step:	none
  */
 
 
 #include <common.h>
-#include <bootstage.h>
 #include <command.h>
 #include <console.h>
-#include <env.h>
-#include <env_internal.h>
+#include <environment.h>
 #include <errno.h>
-#include <image.h>
-#include <log.h>
 #include <net.h>
-#include <net/fastboot.h>
 #include <net/tftp.h>
-#if defined(CONFIG_CMD_PCAP)
-#include <net/pcap.h>
-#endif
-#include <net/udp.h>
 #if defined(CONFIG_LED_STATUS)
 #include <miiphy.h>
 #include <status_led.h>
@@ -113,9 +104,11 @@
 #include "nfs.h"
 #include "ping.h"
 #include "rarp.h"
-#if defined(CONFIG_CMD_WOL)
-#include "wol.h"
+#if defined(CONFIG_CMD_SNTP)
+#include "sntp.h"
 #endif
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /** BOOTP EXTENTIONS **/
 
@@ -128,6 +121,10 @@ struct in_addr net_dns_server;
 #if defined(CONFIG_BOOTP_DNS2)
 /* Our 2nd DNS IP address */
 struct in_addr net_dns_server2;
+#endif
+
+#ifdef CONFIG_MCAST_TFTP	/* Multicast TFTP */
+struct in_addr net_mcast_addr;
 #endif
 
 /** END OF BOOTP EXTENTIONS **/
@@ -169,12 +166,17 @@ ushort		net_native_vlan = 0xFFFF;
 
 /* Boot File name */
 char net_boot_file_name[1024];
-/* Indicates whether the file name was specified on the command line */
-bool net_boot_file_name_explicit;
 /* The actual transferred size of the bootfile (in bytes) */
 u32 net_boot_file_size;
 /* Boot file size in blocks as reported by the DHCP server */
 u32 net_boot_file_expected_size_in_blocks;
+
+#if defined(CONFIG_CMD_SNTP)
+/* NTP server IP address */
+struct in_addr	net_ntp_server;
+/* offset time from UTC */
+int		net_ntp_time_offset;
+#endif
 
 static uchar net_pkt_buf[(PKTBUFSRX+1) * PKTSIZE_ALIGN + PKTALIGN];
 /* Receive packets */
@@ -203,6 +205,26 @@ static int net_try_count;
 int __maybe_unused net_busy_flag;
 
 /**********************************************************************/
+
+static int on_bootfile(const char *name, const char *value, enum env_op op,
+	int flags)
+{
+	if (flags & H_PROGRAMMATIC)
+		return 0;
+
+	switch (op) {
+	case env_op_create:
+	case env_op_overwrite:
+		copy_filename(net_boot_file_name, value,
+			      sizeof(net_boot_file_name));
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+U_BOOT_ENV_CALLBACK(bootfile, on_bootfile);
 
 static int on_ipaddr(const char *name, const char *value, enum env_op op,
 	int flags)
@@ -296,20 +318,10 @@ U_BOOT_ENV_CALLBACK(dnsip, on_dnsip);
  */
 void net_auto_load(void)
 {
-#if defined(CONFIG_CMD_NFS) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_CMD_NFS)
 	const char *s = env_get("autoload");
 
 	if (s != NULL && strcmp(s, "NFS") == 0) {
-		if (net_check_prereq(NFS)) {
-/* We aren't expecting to get a serverip, so just accept the assigned IP */
-#ifdef CONFIG_BOOTP_SERVERIP
-			net_set_state(NETLOOP_SUCCESS);
-#else
-			printf("Cannot autoload with NFS\n");
-			net_set_state(NETLOOP_FAIL);
-#endif
-			return;
-		}
 		/*
 		 * Use NFS to load the bootfile.
 		 */
@@ -325,32 +337,15 @@ void net_auto_load(void)
 		net_set_state(NETLOOP_SUCCESS);
 		return;
 	}
-	if (net_check_prereq(TFTPGET)) {
-/* We aren't expecting to get a serverip, so just accept the assigned IP */
-#ifdef CONFIG_BOOTP_SERVERIP
-		net_set_state(NETLOOP_SUCCESS);
-#else
-		printf("Cannot autoload with TFTPGET\n");
-		net_set_state(NETLOOP_FAIL);
-#endif
-		return;
-	}
 	tftp_start(TFTPGET);
 }
 
-static int net_init_loop(void)
+static void net_init_loop(void)
 {
 	if (eth_get_dev())
 		memcpy(net_ethaddr, eth_get_ethaddr(), 6);
-	else
-		/*
-		 * Not ideal, but there's no way to get the actual error, and I
-		 * don't feel like fixing all the users of eth_get_dev to deal
-		 * with errors.
-		 */
-		return -ENONET;
 
-	return 0;
+	return;
 }
 
 static void net_clear_handlers(void)
@@ -365,7 +360,7 @@ static void net_cleanup_loop(void)
 	net_clear_handlers();
 }
 
-int net_init(void)
+void net_init(void)
 {
 	static int first_call = 1;
 
@@ -388,7 +383,7 @@ int net_init(void)
 		first_call = 0;
 	}
 
-	return net_init_loop();
+	net_init_loop();
 }
 
 /**********************************************************************/
@@ -399,12 +394,7 @@ int net_init(void)
 int net_loop(enum proto_t protocol)
 {
 	int ret = -EINVAL;
-	enum net_loop_state prev_net_state = net_state;
 
-#if defined(CONFIG_CMD_PING)
-	if (protocol != PING)
-		net_ping_ip.s_addr = 0;
-#endif
 	net_restarted = 0;
 	net_dev_exists = 0;
 	net_try_count = 1;
@@ -441,7 +431,6 @@ restart:
 	case 1:
 		/* network not configured */
 		eth_halt();
-		net_set_state(prev_net_state);
 		return -ENODEV;
 
 	case 2:
@@ -452,7 +441,6 @@ restart:
 		net_dev_exists = 1;
 		net_boot_file_size = 0;
 		switch (protocol) {
-#ifdef CONFIG_CMD_TFTPBOOT
 		case TFTPGET:
 #ifdef CONFIG_CMD_TFTPPUT
 		case TFTPPUT:
@@ -460,15 +448,9 @@ restart:
 			/* always use ARP to get server ethernet address */
 			tftp_start(protocol);
 			break;
-#endif
 #ifdef CONFIG_CMD_TFTPSRV
 		case TFTPSRV:
 			tftp_start_server();
-			break;
-#endif
-#ifdef CONFIG_UDP_FUNCTION_FASTBOOT
-		case FASTBOOT:
-			fastboot_start_server();
 			break;
 #endif
 #if defined(CONFIG_CMD_DHCP)
@@ -478,13 +460,13 @@ restart:
 			dhcp_request();		/* Basically same as BOOTP */
 			break;
 #endif
-#if defined(CONFIG_CMD_BOOTP)
+
 		case BOOTP:
 			bootp_reset();
 			net_ip.s_addr = 0;
 			bootp_request();
 			break;
-#endif
+
 #if defined(CONFIG_CMD_RARP)
 		case RARP:
 			rarp_try = 0;
@@ -497,7 +479,7 @@ restart:
 			ping_start();
 			break;
 #endif
-#if defined(CONFIG_CMD_NFS) && !defined(CONFIG_SPL_BUILD)
+#if defined(CONFIG_CMD_NFS)
 		case NFS:
 			nfs_start();
 			break;
@@ -512,6 +494,11 @@ restart:
 			nc_start();
 			break;
 #endif
+#if defined(CONFIG_CMD_SNTP)
+		case SNTP:
+			sntp_start();
+			break;
+#endif
 #if defined(CONFIG_CMD_DNS)
 		case DNS:
 			dns_start();
@@ -522,17 +509,9 @@ restart:
 			link_local_start();
 			break;
 #endif
-#if defined(CONFIG_CMD_WOL)
-		case WOL:
-			wol_start();
-			break;
-#endif
 		default:
 			break;
 		}
-
-		if (IS_ENABLED(CONFIG_PROT_UDP) && protocol == UDP)
-			udp_start();
 
 		break;
 	}
@@ -560,6 +539,9 @@ restart:
 	 */
 	for (;;) {
 		WATCHDOG_RESET();
+#ifdef CONFIG_SHOW_ACTIVITY
+		show_activity(1);
+#endif
 		if (arp_timeout_check() > 0)
 			time_start = get_timer(0);
 
@@ -635,7 +617,7 @@ restart:
 				printf("Bytes transferred = %d (%x hex)\n",
 				       net_boot_file_size, net_boot_file_size);
 				env_set_hex("filesize", net_boot_file_size);
-				env_set_hex("fileaddr", image_load_addr);
+				env_set_hex("fileaddr", load_addr);
 			}
 			if (protocol != NETCONS)
 				eth_halt();
@@ -653,7 +635,6 @@ restart:
 			/* Invalidate the last protocol */
 			eth_set_last_protocol(BOOTP);
 			debug_cond(DEBUG_INT_STATE, "--- net_loop Fail!\n");
-			ret = -ENONET;
 			goto done;
 
 		case NETLOOP_CONTINUE:
@@ -669,12 +650,6 @@ done:
 	/* Clear out the handlers */
 	net_set_udp_handler(NULL);
 	net_set_icmp_handler(NULL);
-#endif
-	net_set_state(prev_net_state);
-
-#if defined(CONFIG_CMD_PCAP)
-	if (pcap_active())
-		pcap_print_status();
 #endif
 	return ret;
 }
@@ -708,7 +683,7 @@ int net_start_again(void)
 		retry_forever = 0;
 	}
 
-	if ((!retry_forever) && (net_try_count > retrycnt)) {
+	if ((!retry_forever) && (net_try_count >= retrycnt)) {
 		eth_halt();
 		net_set_state(NETLOOP_FAIL);
 		/*
@@ -801,24 +776,8 @@ void net_set_timeout_handler(ulong iv, thand_f *f)
 	}
 }
 
-uchar *net_get_async_tx_pkt_buf(void)
-{
-	if (arp_is_waiting())
-		return arp_tx_packet; /* If we are waiting, we already sent */
-	else
-		return net_tx_packet;
-}
-
 int net_send_udp_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 		int payload_len)
-{
-	return net_send_ip_packet(ether, dest, dport, sport, payload_len,
-				  IPPROTO_UDP, 0, 0, 0);
-}
-
-int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
-		       int payload_len, int proto, u8 action, u32 tcp_seq_num,
-		       u32 tcp_ack_num)
 {
 	uchar *pkt;
 	int eth_hdr_size;
@@ -840,16 +799,9 @@ int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
 	pkt = (uchar *)net_tx_packet;
 
 	eth_hdr_size = net_set_ether(pkt, ether, PROT_IP);
-
-	switch (proto) {
-	case IPPROTO_UDP:
-		net_set_udp_header(pkt + eth_hdr_size, dest, dport, sport,
-				   payload_len);
-		pkt_hdr_size = eth_hdr_size + IP_UDP_HDR_SIZE;
-		break;
-	default:
-		return -EINVAL;
-	}
+	pkt += eth_hdr_size;
+	net_set_udp_header(pkt, dest, dport, sport, payload_len);
+	pkt_hdr_size = eth_hdr_size + IP_UDP_HDR_SIZE;
 
 	/* if MAC address was not discovered yet, do an ARP request */
 	if (memcmp(ether, net_null_ethaddr, 6) == 0) {
@@ -881,6 +833,9 @@ int net_send_ip_packet(uchar *ether, struct in_addr dest, int dport, int sport,
  * to the algorithm in RFC815. It returns NULL or the pointer to
  * a complete packet, in static storage
  */
+#ifndef CONFIG_NET_MAXDEFRAG
+#define CONFIG_NET_MAXDEFRAG 16384
+#endif
 #define IP_PKTSIZE (CONFIG_NET_MAXDEFRAG)
 
 #define IP_MAXUDP (IP_PKTSIZE - IP_HDR_SIZE)
@@ -1085,9 +1040,6 @@ void net_process_received_packet(uchar *in_packet, int len)
 
 	debug_cond(DEBUG_NET_PKT, "packet received\n");
 
-#if defined(CONFIG_CMD_PCAP)
-	pcap_post(in_packet, len, false);
-#endif
 	net_rx_packet = in_packet;
 	net_rx_packet_len = len;
 	et = (struct ethernet_hdr *)in_packet;
@@ -1217,6 +1169,9 @@ void net_process_received_packet(uchar *in_packet, int len)
 		dst_ip = net_read_ip(&ip->ip_dst);
 		if (net_ip.s_addr && dst_ip.s_addr != net_ip.s_addr &&
 		    dst_ip.s_addr != 0xFFFFFFFF) {
+#ifdef CONFIG_MCAST_TFTP
+			if (net_mcast_addr != dst_ip)
+#endif
 				return;
 		}
 		/* Read source IP address for later use */
@@ -1257,9 +1212,6 @@ void net_process_received_packet(uchar *in_packet, int len)
 			return;
 		}
 
-		if (ntohs(ip->udp_len) < UDP_HDR_SIZE || ntohs(ip->udp_len) > ntohs(ip->ip_len))
-			return;
-
 		debug_cond(DEBUG_DEV_PKT,
 			   "received UDP (to=%pI4, from=%pI4, len=%d)\n",
 			   &dst_ip, &src_ip, len);
@@ -1267,7 +1219,7 @@ void net_process_received_packet(uchar *in_packet, int len)
 #ifdef CONFIG_UDP_CHECKSUM
 		if (ip->udp_xsum != 0) {
 			ulong   xsum;
-			u8 *sumptr;
+			ushort *sumptr;
 			ushort  sumlen;
 
 			xsum  = ip->ip_p;
@@ -1278,16 +1230,22 @@ void net_process_received_packet(uchar *in_packet, int len)
 			xsum += (ntohl(ip->ip_dst.s_addr) >>  0) & 0x0000ffff;
 
 			sumlen = ntohs(ip->udp_len);
-			sumptr = (u8 *)&ip->udp_src;
+			sumptr = (ushort *)&(ip->udp_src);
 
 			while (sumlen > 1) {
-				/* inlined ntohs() to avoid alignment errors */
-				xsum += (sumptr[0] << 8) + sumptr[1];
-				sumptr += 2;
+				ushort sumdata;
+
+				sumdata = *sumptr++;
+				xsum += ntohs(sumdata);
 				sumlen -= 2;
 			}
-			if (sumlen > 0)
-				xsum += (sumptr[0] << 8) + sumptr[0];
+			if (sumlen > 0) {
+				ushort sumdata;
+
+				sumdata = *(unsigned char *)sumptr;
+				sumdata = (sumdata << 8) & 0xff00;
+				xsum += sumdata;
+			}
 			while ((xsum >> 16) != 0) {
 				xsum = (xsum & 0x0000ffff) +
 				       ((xsum >> 16) & 0x0000ffff);
@@ -1316,11 +1274,6 @@ void net_process_received_packet(uchar *in_packet, int len)
 				      ntohs(ip->udp_src),
 				      ntohs(ip->udp_len) - UDP_HDR_SIZE);
 		break;
-#ifdef CONFIG_CMD_WOL
-	case PROT_WOL:
-		wol_receive(ip, len);
-		break;
-#endif
 	}
 }
 
@@ -1338,6 +1291,14 @@ static int net_check_prereq(enum proto_t protocol)
 		}
 		goto common;
 #endif
+#if defined(CONFIG_CMD_SNTP)
+	case SNTP:
+		if (net_ntp_server.s_addr == 0) {
+			puts("*** ERROR: NTP server address not given\n");
+			return 1;
+		}
+		goto common;
+#endif
 #if defined(CONFIG_CMD_DNS)
 	case DNS:
 		if (net_dns_server.s_addr == 0) {
@@ -1346,31 +1307,23 @@ static int net_check_prereq(enum proto_t protocol)
 		}
 		goto common;
 #endif
-#if defined(CONFIG_PROT_UDP)
-	case UDP:
-		if (udp_prereq())
-			return 1;
-		goto common;
-#endif
-
 #if defined(CONFIG_CMD_NFS)
 	case NFS:
 #endif
 		/* Fall through */
 	case TFTPGET:
 	case TFTPPUT:
-		if (net_server_ip.s_addr == 0 && !is_serverip_in_cmd()) {
+		if (net_server_ip.s_addr == 0) {
 			puts("*** ERROR: `serverip' not set\n");
 			return 1;
 		}
-#if	defined(CONFIG_CMD_PING) || \
-	defined(CONFIG_CMD_DNS) || defined(CONFIG_PROT_UDP)
+#if	defined(CONFIG_CMD_PING) || defined(CONFIG_CMD_SNTP) || \
+	defined(CONFIG_CMD_DNS)
 common:
 #endif
 		/* Fall through */
 
 	case NETCONS:
-	case FASTBOOT:
 	case TFTPSRV:
 		if (net_ip.s_addr == 0) {
 			puts("*** ERROR: `ipaddr' not set\n");
@@ -1473,8 +1426,7 @@ int net_update_ether(struct ethernet_hdr *et, uchar *addr, uint prot)
 	}
 }
 
-void net_set_ip_header(uchar *pkt, struct in_addr dest, struct in_addr source,
-		       u16 pkt_len, u8 proto)
+void net_set_ip_header(uchar *pkt, struct in_addr dest, struct in_addr source)
 {
 	struct ip_udp_hdr *ip = (struct ip_udp_hdr *)pkt;
 
@@ -1484,8 +1436,7 @@ void net_set_ip_header(uchar *pkt, struct in_addr dest, struct in_addr source,
 	/* IP_HDR_SIZE / 4 (not including UDP) */
 	ip->ip_hl_v  = 0x45;
 	ip->ip_tos   = 0;
-	ip->ip_len   = htons(pkt_len);
-	ip->ip_p     = proto;
+	ip->ip_len   = htons(IP_HDR_SIZE);
 	ip->ip_id    = htons(net_ip_id++);
 	ip->ip_off   = htons(IP_FLAGS_DFRAG);	/* Don't fragment */
 	ip->ip_ttl   = 255;
@@ -1494,8 +1445,6 @@ void net_set_ip_header(uchar *pkt, struct in_addr dest, struct in_addr source,
 	net_copy_ip((void *)&ip->ip_src, &source);
 	/* already in network byte order */
 	net_copy_ip((void *)&ip->ip_dst, &dest);
-
-	ip->ip_sum   = compute_ip_checksum(ip, IP_HDR_SIZE);
 }
 
 void net_set_udp_header(uchar *pkt, struct in_addr dest, int dport, int sport,
@@ -1511,8 +1460,10 @@ void net_set_udp_header(uchar *pkt, struct in_addr dest, int dport, int sport,
 	if (len & 1)
 		pkt[IP_UDP_HDR_SIZE + len] = 0;
 
-	net_set_ip_header(pkt, dest, net_ip, IP_UDP_HDR_SIZE + len,
-			  IPPROTO_UDP);
+	net_set_ip_header(pkt, dest, net_ip);
+	ip->ip_len   = htons(IP_UDP_HDR_SIZE + len);
+	ip->ip_p     = IPPROTO_UDP;
+	ip->ip_sum   = compute_ip_checksum(ip, IP_HDR_SIZE);
 
 	ip->udp_src  = htons(sport);
 	ip->udp_dst  = htons(dport);
@@ -1522,40 +1473,29 @@ void net_set_udp_header(uchar *pkt, struct in_addr dest, int dport, int sport,
 
 void copy_filename(char *dst, const char *src, int size)
 {
-	if (src && *src && (*src == '"')) {
+	if (*src && (*src == '"')) {
 		++src;
 		--size;
 	}
 
-	while ((--size > 0) && src && *src && (*src != '"'))
+	while ((--size > 0) && *src && (*src != '"'))
 		*dst++ = *src++;
 	*dst = '\0';
 }
 
-int is_serverip_in_cmd(void)
+#if	defined(CONFIG_CMD_NFS)		|| \
+	defined(CONFIG_CMD_SNTP)	|| \
+	defined(CONFIG_CMD_DNS)
+/*
+ * make port a little random (1024-17407)
+ * This keeps the math somewhat trivial to compute, and seems to work with
+ * all supported protocols/clients/servers
+ */
+unsigned int random_port(void)
 {
-	return !!strchr(net_boot_file_name, ':');
+	return 1024 + (get_timer(0) % 0x4000);
 }
-
-int net_parse_bootfile(struct in_addr *ipaddr, char *filename, int max_len)
-{
-	char *colon;
-
-	if (net_boot_file_name[0] == '\0')
-		return 0;
-
-	colon = strchr(net_boot_file_name, ':');
-	if (colon) {
-		if (ipaddr)
-			*ipaddr = string_to_ip(net_boot_file_name);
-		strncpy(filename, colon + 1, max_len);
-	} else {
-		strncpy(filename, net_boot_file_name, max_len);
-	}
-	filename[max_len - 1] = '\0';
-
-	return 1;
-}
+#endif
 
 void ip_to_string(struct in_addr x, char *s)
 {

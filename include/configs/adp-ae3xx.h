@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2011 Andes Technology Corporation
  * Shawn Lin, Andes Technology Corporation <nobuhiro@andestech.com>
  * Macpaul Lin, Andes Technology Corporation <macpaul@andestech.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -19,15 +20,22 @@
 
 #define CONFIG_SKIP_TRUNOFF_WATCHDOG
 
+#define CONFIG_CMDLINE_EDITING
+
 #define CONFIG_ARCH_MAP_SYSMEM
 
+#define CONFIG_BOOTP_SEND_HOSTNAME
 #define CONFIG_BOOTP_SERVERIP
 
 #ifdef CONFIG_SKIP_LOWLEVEL_INIT
+#define CONFIG_SYS_TEXT_BASE	0x00500000
 #ifdef CONFIG_OF_CONTROL
 #undef CONFIG_OF_SEPARATE
 #define CONFIG_OF_EMBED
 #endif
+#else
+
+#define CONFIG_SYS_TEXT_BASE	0x80000000
 #endif
 
 /*
@@ -71,6 +79,7 @@
  */
 
 /* FTUART is a high speed NS 16C550A compatible UART, addr: 0x99600000 */
+#define CONFIG_CONS_INDEX		1
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_COM1		CONFIG_FTUART010_02_BASE
 #ifndef CONFIG_DM_SERIAL
@@ -79,8 +88,15 @@
 #define CONFIG_SYS_NS16550_CLK		((18432000 * 20) / 25)	/* AG101P */
 
 /*
+ * SD (MMC) controller
+ */
+#define CONFIG_FTSDC010_NUMBER		1
+#define CONFIG_FTSDC010_SDIO
+
+/*
  * Miscellaneous configurable options
  */
+#define CONFIG_SYS_LONGHELP			/* undef to save memory */
 
 /*
  * Size of malloc() pool
@@ -95,6 +111,8 @@
 
 #define PHYS_SDRAM_1 \
 	(PHYS_SDRAM_0 + PHYS_SDRAM_0_SIZE)	/* SDRAM Bank #2 */
+
+#define CONFIG_NR_DRAM_BANKS	2		/* we have 2 bank of DRAM */
 
 #define PHYS_SDRAM_0_SIZE	0x20000000	/* 512 MB */
 #define PHYS_SDRAM_1_SIZE	0x20000000	/* 512 MB */
@@ -111,6 +129,8 @@
 #define CONFIG_SYS_LOAD_ADDR		0x300000
 
 /* memtest works on 63 MB in DRAM */
+#define CONFIG_SYS_MEMTEST_START	PHYS_SDRAM_0
+#define CONFIG_SYS_MEMTEST_END		(PHYS_SDRAM_0 + 0x03F00000)
 
 /*
  * Static memory controller configuration
@@ -165,8 +185,11 @@
  * FLASH and environment organization
  */
 /* use CFI framework */
+#define CONFIG_SYS_FLASH_CFI
+#define CONFIG_FLASH_CFI_DRIVER
 
 #define CONFIG_SYS_FLASH_CFI_WIDTH	FLASH_CFI_16BIT
+#define CONFIG_SYS_FLASH_USE_BUFFER_WRITE
 #define CONFIG_SYS_CFI_FLASH_STATUS_POLL
 
 /* support JEDEC */
@@ -198,9 +221,21 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	512
 
 /* environments */
+#define CONFIG_ENV_SPI_BUS		0
+#define CONFIG_ENV_SPI_CS		0
+#define CONFIG_ENV_SPI_MAX_HZ		50000000
+#define CONFIG_ENV_SPI_MODE		0
+#define CONFIG_ENV_SECT_SIZE		0x1000
+#define CONFIG_ENV_OFFSET		0x140000
+#define CONFIG_ENV_SIZE			8192
+#define CONFIG_ENV_OVERWRITE
 
 
 /* SPI FLASH */
+#define CONFIG_SF_DEFAULT_BUS		0
+#define CONFIG_SF_DEFAULT_CS		0
+#define CONFIG_SF_DEFAULT_SPEED		1000000
+#define CONFIG_SF_DEFAULT_MODE		0
 
 /*
  * For booting Linux, the board info and command line data

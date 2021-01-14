@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Board functions for TI AM335X based draco board
  * (C) Copyright 2013 Siemens Schweiz AG
@@ -10,14 +9,12 @@
  * u-boot:/board/ti/am335x/board.c
  *
  * Copyright (C) 2011, Texas Instruments, Incorporated - http://www.ti.com/
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <command.h>
-#include <env.h>
 #include <errno.h>
-#include <init.h>
-#include <net.h>
 #include <spl.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/hardware.h>
@@ -35,10 +32,11 @@
 #include <miiphy.h>
 #include <cpsw.h>
 #include <watchdog.h>
-#include <linux/delay.h>
 #include "board.h"
 #include "../common/factoryset.h"
 #include <nand.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef CONFIG_SPL_BUILD
 static struct draco_baseboard_id __attribute__((section(".data"))) settings;
@@ -326,7 +324,7 @@ static struct cpsw_platform_data cpsw_data = {
 
 #if defined(CONFIG_DRIVER_TI_CPSW) || \
 	(defined(CONFIG_USB_ETHER) && defined(CONFIG_USB_MUSB_GADGET))
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	struct ctrl_dev *cdev = (struct ctrl_dev *)CTRL_DEVICE_BASE;
 	int n = 0;
@@ -345,8 +343,8 @@ int board_eth_init(struct bd_info *bis)
 	return n;
 }
 
-static int do_switch_reset(struct cmd_tbl *cmdtp, int flag, int argc,
-			   char *const argv[])
+static int do_switch_reset(cmd_tbl_t *cmdtp, int flag, int argc,
+			  char *const argv[])
 {
 	/* Reset SMSC LAN9303 switch for default configuration */
 	gpio_request(GPIO_LAN9303_NRST, "nRST");

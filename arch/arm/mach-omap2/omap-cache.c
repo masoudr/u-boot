@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * Common functions for OMAP4/5 based boards
@@ -9,11 +8,11 @@
  * Author :
  *	Aneesh V	<aneesh@ti.com>
  *	Steve Sakoman	<steve@sakoman.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <log.h>
 #include <asm/cache.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -45,17 +44,13 @@ DECLARE_GLOBAL_DATA_PTR;
 
 void enable_caches(void)
 {
-
-	/* Enable I cache if not enabled */
-	if (!icache_status())
-		icache_enable();
-
+	/* Enable D-cache. I-cache is already enabled in start.S */
 	dcache_enable();
 }
 
 void dram_bank_mmu_setup(int bank)
 {
-	struct bd_info *bd = gd->bd;
+	bd_t *bd = gd->bd;
 	int	i;
 
 	u32 start = bd->bi_dram[bank].start >> MMU_SECTION_SHIFT;

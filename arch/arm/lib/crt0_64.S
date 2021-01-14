@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * crt0 - C-runtime startup Code for AArch64 U-Boot
  *
@@ -7,6 +6,8 @@
  *
  * (C) Copyright 2012
  * Albert ARIBAUD <albert.u.boot@aribaud.net>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>
@@ -72,14 +73,6 @@ ENTRY(_main)
 	ldr	x0, =(CONFIG_TPL_STACK)
 #elif defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_STACK)
 	ldr	x0, =(CONFIG_SPL_STACK)
-#elif defined(CONFIG_INIT_SP_RELATIVE)
-#if CONFIG_POSITION_INDEPENDENT
-	adrp	x0, __bss_start     /* x0 <- Runtime &__bss_start */
-	add	x0, x0, #:lo12:__bss_start
-#else
-	adr	x0, __bss_start
-#endif
-	add	x0, x0, #CONFIG_SYS_INIT_SP_BSS_OFFSET
 #else
 	ldr	x0, =(CONFIG_SYS_INIT_SP_ADDR)
 #endif
@@ -107,8 +100,7 @@ ENTRY(_main)
 	adr	lr, relocation_return
 #if CONFIG_POSITION_INDEPENDENT
 	/* Add in link-vs-runtime offset */
-	adrp	x0, _start		/* x0 <- Runtime value of _start */
-	add	x0, x0, #:lo12:_start
+	adr	x0, _start		/* x0 <- Runtime value of _start */
 	ldr	x9, _TEXT_BASE		/* x9 <- Linked value of _start */
 	sub	x9, x9, x0		/* x9 <- Run-vs-link offset */
 	add	lr, lr, x9
@@ -126,7 +118,6 @@ relocation_return:
  */
 	bl	c_runtime_cpu_setup		/* still call old routine */
 #endif /* !CONFIG_SPL_BUILD */
-#if !defined(CONFIG_SPL_BUILD) || CONFIG_IS_ENABLED(FRAMEWORK)
 #if defined(CONFIG_SPL_BUILD)
 	bl	spl_relocate_stack_gd           /* may return NULL */
 	/* set up gd here, outside any C code, if new stack is returned */
@@ -159,6 +150,5 @@ clear_loop:
 	b	board_init_r			/* PC relative jump */
 
 	/* NOTREACHED - board_init_r() does not return */
-#endif
 
 ENDPROC(_main)

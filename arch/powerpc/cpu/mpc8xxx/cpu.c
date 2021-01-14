@@ -1,18 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009-2012 Freescale Semiconductor, Inc.
  *
  * This file is derived from arch/powerpc/cpu/mpc85xx/cpu.c and
  * arch/powerpc/cpu/mpc86xx/cpu.c. Basically this file contains
  * cpu specific common code for 85xx/86xx processors.
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>
 #include <common.h>
 #include <command.h>
-#include <cpu_func.h>
-#include <init.h>
-#include <net.h>
 #include <tsec.h>
 #include <fm_eth.h>
 #include <netdev.h>
@@ -343,12 +340,11 @@ int fixup_cpu(void)
 	return 0;
 }
 
-#ifndef CONFIG_DM_ETH
 /*
  * Initializes on-chip ethernet controllers.
  * to override, implement board_eth_init()
  */
-int cpu_eth_init(struct bd_info *bis)
+int cpu_eth_init(bd_t *bis)
 {
 #if defined(CONFIG_ETHER_ON_FCC)
 	fec_initialize(bis);
@@ -371,4 +367,3 @@ int cpu_eth_init(struct bd_info *bis)
 #endif
 	return 0;
 }
-#endif

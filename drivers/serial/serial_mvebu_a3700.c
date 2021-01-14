@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -8,7 +9,7 @@
 #include <serial.h>
 #include <asm/io.h>
 
-struct mvebu_plat {
+struct mvebu_platdata {
 	void __iomem *base;
 };
 
@@ -32,7 +33,7 @@ struct mvebu_plat {
 
 static int mvebu_serial_putc(struct udevice *dev, const char ch)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 	void __iomem *base = plat->base;
 
 	while (readl(base + UART_STATUS_REG) & UART_STATUS_TXFIFO_FULL)
@@ -45,7 +46,7 @@ static int mvebu_serial_putc(struct udevice *dev, const char ch)
 
 static int mvebu_serial_getc(struct udevice *dev)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 	void __iomem *base = plat->base;
 
 	while (!(readl(base + UART_STATUS_REG) & UART_STATUS_RX_RDY))
@@ -56,7 +57,7 @@ static int mvebu_serial_getc(struct udevice *dev)
 
 static int mvebu_serial_pending(struct udevice *dev, bool input)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 	void __iomem *base = plat->base;
 
 	if (readl(base + UART_STATUS_REG) & UART_STATUS_RX_RDY)
@@ -67,7 +68,7 @@ static int mvebu_serial_pending(struct udevice *dev, bool input)
 
 static int mvebu_serial_setbrg(struct udevice *dev, int baudrate)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 	void __iomem *base = plat->base;
 
 	/*
@@ -87,7 +88,7 @@ static int mvebu_serial_setbrg(struct udevice *dev, int baudrate)
 
 static int mvebu_serial_probe(struct udevice *dev)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 	void __iomem *base = plat->base;
 
 	/* reset FIFOs */
@@ -100,11 +101,11 @@ static int mvebu_serial_probe(struct udevice *dev)
 	return 0;
 }
 
-static int mvebu_serial_of_to_plat(struct udevice *dev)
+static int mvebu_serial_ofdata_to_platdata(struct udevice *dev)
 {
-	struct mvebu_plat *plat = dev_get_plat(dev);
+	struct mvebu_platdata *plat = dev_get_platdata(dev);
 
-	plat->base = dev_read_addr_ptr(dev);
+	plat->base = devfdt_get_addr_ptr(dev);
 
 	return 0;
 }
@@ -125,10 +126,11 @@ U_BOOT_DRIVER(serial_mvebu) = {
 	.name	= "serial_mvebu",
 	.id	= UCLASS_SERIAL,
 	.of_match = mvebu_serial_ids,
-	.of_to_plat = mvebu_serial_of_to_plat,
-	.plat_auto	= sizeof(struct mvebu_plat),
+	.ofdata_to_platdata = mvebu_serial_ofdata_to_platdata,
+	.platdata_auto_alloc_size = sizeof(struct mvebu_platdata),
 	.probe	= mvebu_serial_probe,
 	.ops	= &mvebu_serial_ops,
+	.flags	= DM_FLAG_PRE_RELOC,
 };
 
 #ifdef CONFIG_DEBUG_MVEBU_A3700_UART

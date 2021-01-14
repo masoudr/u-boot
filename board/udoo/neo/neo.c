@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014-2015 Freescale Semiconductor, Inc.
  * Copyright (C) Jasbir Matharu
@@ -6,10 +5,10 @@
  *
  * Author: Breno Lima <breno.lima@nxp.com>
  * Author: Francesco Montefoschi <francesco.monte@gmail.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <init.h>
-#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/crm_regs.h>
 #include <asm/arch/imx-regs.h>
@@ -17,15 +16,13 @@
 #include <asm/arch/mx6-pins.h>
 #include <asm/gpio.h>
 #include <asm/mach-imx/iomux-v3.h>
-#include <env.h>
 #include <mmc.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <asm/arch/crm_regs.h>
 #include <asm/io.h>
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/arch/sys_proto.h>
 #include <spl.h>
-#include <linux/delay.h>
 #include <linux/sizes.h>
 #include <common.h>
 #include <i2c.h>
@@ -292,7 +289,7 @@ static int setup_fec(int fec_id)
 	return enable_fec_anatop_clock(fec_id, ENET_25MHZ);
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	uint32_t base = IMX_FEC_BASE;
 	struct mii_dev *bus = NULL;
@@ -404,7 +401,7 @@ int board_mmc_getcd(struct mmc *mmc)
 	return !gpio_get_value(USDHC2_CD_GPIO);
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	imx_iomux_v3_setup_multiple_pads(usdhc2_pads, ARRAY_SIZE(usdhc2_pads));
 	usdhc_cfg[0].sdhc_clk = mxc_get_clock(MXC_ESDHC2_CLK);
@@ -448,7 +445,7 @@ int board_late_init(void)
 
 #ifdef CONFIG_SPL_BUILD
 
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <asm/arch/mx6-ddr.h>
 
 static const struct mx6sx_iomux_ddr_regs mx6_ddr_ioregs = {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2002
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
@@ -13,16 +12,14 @@
  *
  * (C) Copyright 2009
  * Ilya Yanok, Emcraft Systems Ltd, <yanok@emcraft.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <div64.h>
-#include <init.h>
-#include <time.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
-#include <asm/ptrace.h>
-#include <linux/delay.h>
 
 /* General purpose timers bitfields */
 #define GPTCR_SWR		(1 << 15)	/* Software reset	*/
@@ -130,7 +127,7 @@ unsigned long long get_ticks(void)
 	return timestamp;
 }
 
-static ulong get_timer_masked(void)
+ulong get_timer_masked(void)
 {
 	/*
 	 * get_ticks() returns a long long (64 bit), it wraps in

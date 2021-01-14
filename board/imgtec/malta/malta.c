@@ -1,19 +1,17 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2013 Gabor Juhos <juhosg@openwrt.org>
  * Copyright (C) 2013 Imagination Technologies
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <ide.h>
-#include <init.h>
-#include <net.h>
 #include <netdev.h>
 #include <pci.h>
 #include <pci_gt64120.h>
 #include <pci_msc01.h>
 #include <rtc.h>
-#include <linux/delay.h>
 
 #include <asm/addrspace.h>
 #include <asm/io.h>
@@ -119,7 +117,7 @@ int checkboard(void)
 	return 0;
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	return pci_eth_init(bis);
 }

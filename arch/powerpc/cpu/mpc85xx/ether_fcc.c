@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * MPC8560 FCC Fast Ethernet
  * Copyright (c) 2003 Motorola,Inc.
@@ -8,6 +7,8 @@
  *
  * (C) Copyright 2000 Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Marius Groeger <mgroeger@sysgo.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -206,7 +207,7 @@ static int fec_recv(struct eth_device* dev)
 }
 
 
-static int fec_init(struct eth_device* dev, struct bd_info *bis)
+static int fec_init(struct eth_device* dev, bd_t *bis)
 {
     struct ether_fcc_info_s * info = dev->priv;
     int i;
@@ -418,7 +419,7 @@ static void fec_halt(struct eth_device* dev)
     }
 }
 
-int fec_initialize(struct bd_info *bis)
+int fec_initialize(bd_t *bis)
 {
 	struct eth_device* dev;
 	int i;

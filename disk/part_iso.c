@@ -1,18 +1,16 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2001
  * Denis Peter, MPL AG Switzerland, d.peter@mpl.ch.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <blk.h>
 #include <command.h>
-#include <part.h>
-#include <asm/cache.h>
 #include <asm/unaligned.h>
 #include "part_iso.h"
 
-#ifdef CONFIG_HAVE_BLOCK_DEVICE
+#ifdef HAVE_BLOCK_DEVICE
 
 /* #define	ISO_PART_DEBUG */
 
@@ -49,7 +47,7 @@ unsigned long iso_dread(struct blk_desc *block_dev, lbaint_t start,
 
 /* only boot records will be listed as valid partitions */
 int part_get_info_iso_verb(struct blk_desc *dev_desc, int part_num,
-			   struct disk_partition *info, int verb)
+			   disk_partition_t *info, int verb)
 {
 	int i,offset,entry_num;
 	unsigned short *chksumbuf;
@@ -202,14 +200,14 @@ found:
 }
 
 static int part_get_info_iso(struct blk_desc *dev_desc, int part_num,
-			     struct disk_partition *info)
+				  disk_partition_t *info)
 {
 	return part_get_info_iso_verb(dev_desc, part_num, info, 0);
 }
 
 static void part_print_iso(struct blk_desc *dev_desc)
 {
-	struct disk_partition info;
+	disk_partition_t info;
 	int i;
 
 	if (part_get_info_iso_verb(dev_desc, 1, &info, 0) == -1) {
@@ -228,7 +226,7 @@ static void part_print_iso(struct blk_desc *dev_desc)
 
 static int part_test_iso(struct blk_desc *dev_desc)
 {
-	struct disk_partition info;
+	disk_partition_t info;
 
 	return part_get_info_iso_verb(dev_desc, 1, &info, 0);
 }

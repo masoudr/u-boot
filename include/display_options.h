@@ -1,9 +1,10 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2015 Google, Inc
  *
  * (C) Copyright 2000-2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __DISPLAY_OPTIONS_H
@@ -24,7 +25,7 @@ void print_size(uint64_t size, const char *suffix);
 /**
  * print_freq() - Print a frequency with a suffix
  *
- * Print frequencies as "x.xx GHz", "xxx kHz", etc as needed; allow for
+ * Print frequencies as "x.xx GHz", "xxx KHz", etc as needed; allow for
  * optional trailing string (like "\n")
  *
  * @freq:	Frequency to print in Hz

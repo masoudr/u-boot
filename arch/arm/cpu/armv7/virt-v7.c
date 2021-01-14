@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2013
  * Andre Przywara, Linaro <andre.przywara@linaro.org>
@@ -6,12 +5,12 @@
  * Routines to transition ARMv7 processors from secure into non-secure state
  * and from non-secure SVC into HYP mode
  * needed to enable ARMv7 virtualization for current hypervisors
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
 #include <asm/armv7.h>
-#include <asm/cache.h>
 #include <asm/gic.h>
 #include <asm/io.h>
 #include <asm/secure.h>

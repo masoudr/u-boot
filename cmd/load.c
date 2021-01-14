@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000-2004
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -10,17 +11,10 @@
 #include <common.h>
 #include <command.h>
 #include <console.h>
-#include <cpu_func.h>
-#include <env.h>
-#include <flash.h>
-#include <image.h>
 #include <s_record.h>
 #include <net.h>
 #include <exports.h>
-#include <serial.h>
 #include <xyzModem.h>
-#include <asm/cache.h>
-#include <linux/delay.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -42,8 +36,8 @@ static int do_echo = 1;
 /* -------------------------------------------------------------------- */
 
 #if defined(CONFIG_CMD_LOADS)
-static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
-			  char *const argv[])
+static int do_load_serial(cmd_tbl_t *cmdtp, int flag, int argc,
+			  char * const argv[])
 {
 	long offset = 0;
 	ulong addr;
@@ -81,7 +75,7 @@ static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == '\r')
+			if (getc() == '\r')
 				break;
 		}
 	}
@@ -102,7 +96,7 @@ static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 	 */
 	for (i=0; i<100; ++i) {
 		if (tstc()) {
-			getchar();
+			(void) getc();
 		}
 		udelay(1000);
 	}
@@ -112,7 +106,7 @@ static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 		rcode = 1;
 	} else {
 		printf("## Start Addr      = 0x%08lX\n", addr);
-		image_load_addr = addr;
+		load_addr = addr;
 	}
 
 #ifdef	CONFIG_SYS_LOADS_BAUD_CHANGE
@@ -124,7 +118,7 @@ static int do_load_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == 0x1B) /* ESC */
+			if (getc() == 0x1B) /* ESC */
 				break;
 		}
 	}
@@ -212,7 +206,7 @@ static int read_record(char *buf, ulong len)
 	--len;	/* always leave room for terminating '\0' byte */
 
 	for (p=buf; p < buf+len; ++p) {
-		c = getchar();		/* read character		*/
+		c = getc();		/* read character		*/
 		if (do_echo)
 			putc(c);	/* ... and echo it		*/
 
@@ -228,11 +222,12 @@ static int read_record(char *buf, ulong len)
 			*p = c;
 		}
 
-		/* Check for the console hangup (if any different from serial) */
-		if (gd->jt->getc != getchar) {
-			if (ctrlc())
-				return (-1);
+	    /* Check for the console hangup (if any different from serial) */
+	    if (gd->jt->getc != getc) {
+		if (ctrlc()) {
+		    return (-1);
 		}
+	    }
 	}
 
 	/* line too long - truncate */
@@ -242,8 +237,7 @@ static int read_record(char *buf, ulong len)
 
 #if defined(CONFIG_CMD_SAVES)
 
-int do_save_serial(struct cmd_tbl *cmdtp, int flag, int argc,
-		   char *const argv[])
+int do_save_serial (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	ulong offset = 0;
 	ulong size   = 0;
@@ -275,7 +269,7 @@ int do_save_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == '\r')
+			if (getc() == '\r')
 				break;
 		}
 	}
@@ -287,7 +281,7 @@ int do_save_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 
 	printf("## Ready for S-Record upload, press ENTER to proceed ...\n");
 	for (;;) {
-		if (getchar() == '\r')
+		if (getc() == '\r')
 			break;
 	}
 	if (save_serial(offset, size)) {
@@ -304,7 +298,7 @@ int do_save_serial(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == 0x1B) /* ESC */
+			if (getc() == 0x1B) /* ESC */
 				break;
 		}
 	}
@@ -420,8 +414,8 @@ static int  his_pad_count;  /* number of pad chars he needs */
 static char his_pad_char;   /* pad chars he needs */
 static char his_quote;      /* quote chars he'll use */
 
-static int do_load_serial_bin(struct cmd_tbl *cmdtp, int flag, int argc,
-			      char *const argv[])
+static int do_load_serial_bin(cmd_tbl_t *cmdtp, int flag, int argc,
+			      char * const argv[])
 {
 	ulong offset = 0;
 	ulong addr;
@@ -458,7 +452,7 @@ static int do_load_serial_bin(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == '\r')
+			if (getc() == '\r')
 				break;
 		}
 	}
@@ -488,12 +482,12 @@ static int do_load_serial_bin(struct cmd_tbl *cmdtp, int flag, int argc,
 		addr = load_serial_bin(offset);
 
 		if (addr == ~0) {
-			image_load_addr = 0;
+			load_addr = 0;
 			printf("## Binary (kermit) download aborted\n");
 			rcode = 1;
 		} else {
 			printf("## Start Addr      = 0x%08lX\n", addr);
-			image_load_addr = addr;
+			load_addr = addr;
 		}
 	}
 	if (load_baudrate != current_baudrate) {
@@ -504,7 +498,7 @@ static int do_load_serial_bin(struct cmd_tbl *cmdtp, int flag, int argc,
 		serial_setbrg();
 		udelay(50000);
 		for (;;) {
-			if (getchar() == 0x1B) /* ESC */
+			if (getc() == 0x1B) /* ESC */
 				break;
 		}
 	}
@@ -527,7 +521,7 @@ static ulong load_serial_bin(ulong offset)
 	 */
 	for (i=0; i<100; ++i) {
 		if (tstc()) {
-			getchar();
+			(void) getc();
 		}
 		udelay(1000);
 	}
@@ -830,7 +824,7 @@ static int k_recv(void)
 		/* get a packet */
 		/* wait for the starting character or ^C */
 		for (;;) {
-			switch (getchar()) {
+			switch (getc ()) {
 			case START_CHAR:	/* start packet */
 				goto START;
 			case ETX_CHAR:		/* ^C waiting for packet */
@@ -842,13 +836,13 @@ static int k_recv(void)
 START:
 		/* get length of packet */
 		sum = 0;
-		new_char = getchar();
+		new_char = getc();
 		if ((new_char & 0xE0) == 0)
 			goto packet_error;
 		sum += new_char & 0xff;
 		length = untochar(new_char);
 		/* get sequence number */
-		new_char = getchar();
+		new_char = getc();
 		if ((new_char & 0xE0) == 0)
 			goto packet_error;
 		sum += new_char & 0xff;
@@ -875,7 +869,7 @@ START:
 		/* END NEW CODE */
 
 		/* get packet type */
-		new_char = getchar();
+		new_char = getc();
 		if ((new_char & 0xE0) == 0)
 			goto packet_error;
 		sum += new_char & 0xff;
@@ -885,19 +879,19 @@ START:
 		if (length == -2) {
 			/* (length byte was 0, decremented twice) */
 			/* get the two length bytes */
-			new_char = getchar();
+			new_char = getc();
 			if ((new_char & 0xE0) == 0)
 				goto packet_error;
 			sum += new_char & 0xff;
 			len_hi = untochar(new_char);
-			new_char = getchar();
+			new_char = getc();
 			if ((new_char & 0xE0) == 0)
 				goto packet_error;
 			sum += new_char & 0xff;
 			len_lo = untochar(new_char);
 			length = len_hi * 95 + len_lo;
 			/* check header checksum */
-			new_char = getchar();
+			new_char = getc();
 			if ((new_char & 0xE0) == 0)
 				goto packet_error;
 			if (new_char != tochar((sum + ((sum >> 6) & 0x03)) & 0x3f))
@@ -907,7 +901,7 @@ START:
 		}
 		/* bring in rest of packet */
 		while (length > 1) {
-			new_char = getchar();
+			new_char = getc();
 			if ((new_char & 0xE0) == 0)
 				goto packet_error;
 			sum += new_char & 0xff;
@@ -924,13 +918,13 @@ START:
 			}
 		}
 		/* get and validate checksum character */
-		new_char = getchar();
+		new_char = getc();
 		if ((new_char & 0xE0) == 0)
 			goto packet_error;
 		if (new_char != tochar((sum + ((sum >> 6) & 0x03)) & 0x3f))
 			goto packet_error;
 		/* get END_CHAR */
-		new_char = getchar();
+		new_char = getc();
 		if (new_char != END_CHAR) {
 		  packet_error:
 			/* restore state machines */
@@ -954,7 +948,7 @@ START:
 
 static int getcxmodem(void) {
 	if (tstc())
-		return (getchar());
+		return (getc());
 	return -1;
 }
 static ulong load_serial_ymodem(ulong offset, int mode)
@@ -984,7 +978,7 @@ static ulong load_serial_ymodem(ulong offset, int mode)
 				rc = flash_write((char *) ymodemBuf,
 						  store_addr, res);
 				if (rc != 0) {
-					flash_perror(rc);
+					flash_perror (rc);
 					return (~0);
 				}
 			} else

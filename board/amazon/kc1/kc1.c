@@ -1,15 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Amazon Kindle Fire (first generation) codename kc1 config
  *
  * Copyright (C) 2016 Paul Kocialkowski <contact@paulk.fr>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>
 #include <common.h>
-#include <env.h>
-#include <fastboot.h>
-#include <init.h>
 #include <linux/ctype.h>
 #include <linux/usb/musb.h>
 #include <asm/omap_musb.h>
@@ -164,15 +162,12 @@ void get_board_serial(struct tag_serialnr *serialnr)
 	omap_die_id_get_board_serial(serialnr);
 }
 
-int fastboot_set_reboot_flag(enum fastboot_reboot_reason reason)
+int fb_set_reboot_flag(void)
 {
-	if (reason != FASTBOOT_REBOOT_REASON_BOOTLOADER)
-		return -ENOTSUPP;
-
 	return omap_reboot_mode_store("b");
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(1, 0, 0, -1, -1);
 }

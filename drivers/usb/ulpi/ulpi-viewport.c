@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2011 Jana Rapava <fermata7@gmail.com>
  * Copyright (C) 2011 CompuLab, Ltd. <www.compulab.co.il>
@@ -11,11 +10,12 @@
  *
  * Original Copyright follow:
  * Copyright (C) 2011 Google, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <asm/io.h>
-#include <linux/delay.h>
 #include <usb/ulpi.h>
 
 /* ULPI viewport control bits */

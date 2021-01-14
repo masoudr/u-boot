@@ -1,18 +1,17 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Atmel PIO4 device driver
  *
  * Copyright (C) 2015 Atmel Corporation
  *		 Wenyou.Yang <wenyou.yang@atmel.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <clk.h>
 #include <dm.h>
 #include <fdtdec.h>
-#include <malloc.h>
 #include <asm/arch/hardware.h>
 #include <asm/gpio.h>
-#include <linux/bitops.h>
 #include <mach/gpio.h>
 #include <mach/atmel_pio4.h>
 
@@ -45,7 +44,7 @@ static struct atmel_pio4_port *atmel_pio4_port_base(u32 port)
 }
 
 static int atmel_pio4_config_io_func(u32 port, u32 pin,
-				     u32 func, u32 config)
+				     u32 func, u32 use_pullup)
 {
 	struct atmel_pio4_port *port_base;
 	u32 reg, mask;
@@ -59,7 +58,7 @@ static int atmel_pio4_config_io_func(u32 port, u32 pin,
 
 	mask = 1 << pin;
 	reg = func;
-	reg |= config;
+	reg |= use_pullup ? ATMEL_PIO_PUEN_MASK : 0;
 
 	writel(mask, &port_base->mskr);
 	writel(reg, &port_base->cfgr);
@@ -67,60 +66,60 @@ static int atmel_pio4_config_io_func(u32 port, u32 pin,
 	return 0;
 }
 
-int atmel_pio4_set_gpio(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_gpio(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_GPIO,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_a_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_a_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_A,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_b_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_b_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_B,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_c_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_c_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_C,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_d_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_d_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_D,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_e_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_e_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_E,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_f_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_f_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_F,
-					 config);
+					 use_pullup);
 }
 
-int atmel_pio4_set_g_periph(u32 port, u32 pin, u32 config)
+int atmel_pio4_set_g_periph(u32 port, u32 pin, u32 use_pullup)
 {
 	return atmel_pio4_config_io_func(port, pin,
 					 ATMEL_PIO_CFGR_FUNC_PERIPH_G,
-					 config);
+					 use_pullup);
 }
 
 int atmel_pio4_set_pio_output(u32 port, u32 pin, u32 value)
@@ -170,20 +169,20 @@ int atmel_pio4_get_pio_input(u32 port, u32 pin)
 	return (readl(&port_base->pdsr) & mask) ? 1 : 0;
 }
 
-#if CONFIG_IS_ENABLED(DM_GPIO)
+#ifdef CONFIG_DM_GPIO
 
 struct atmel_pioctrl_data {
 	u32 nbanks;
 };
 
-struct atmel_pio4_plat {
+struct atmel_pio4_platdata {
 	struct atmel_pio4_port *reg_base;
 };
 
 static struct atmel_pio4_port *atmel_pio4_bank_base(struct udevice *dev,
 						    u32 bank)
 {
-	struct atmel_pio4_plat *plat = dev_get_plat(dev);
+	struct atmel_pio4_platdata *plat = dev_get_platdata(dev);
 	struct atmel_pio4_port *port_base =
 			(struct atmel_pio4_port *)((u32)plat->reg_base +
 			ATMEL_PIO_BANK_OFFSET * bank);
@@ -281,7 +280,7 @@ static int atmel_pio4_bind(struct udevice *dev)
 
 static int atmel_pio4_probe(struct udevice *dev)
 {
-	struct atmel_pio4_plat *plat = dev_get_plat(dev);
+	struct atmel_pio4_platdata *plat = dev_get_platdata(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	struct atmel_pioctrl_data *pioctrl_data;
 	struct clk clk;
@@ -299,7 +298,7 @@ static int atmel_pio4_probe(struct udevice *dev)
 
 	clk_free(&clk);
 
-	addr_base = dev_read_addr(dev);
+	addr_base = devfdt_get_addr(dev);
 	if (addr_base == FDT_ADDR_T_NONE)
 		return -EINVAL;
 
@@ -338,7 +337,7 @@ U_BOOT_DRIVER(gpio_atmel_pio4) = {
 	.probe	= atmel_pio4_probe,
 	.bind	= atmel_pio4_bind,
 	.of_match = atmel_pio4_ids,
-	.plat_auto	= sizeof(struct atmel_pio4_plat),
+	.platdata_auto_alloc_size = sizeof(struct atmel_pio4_platdata),
 };
 
 #endif

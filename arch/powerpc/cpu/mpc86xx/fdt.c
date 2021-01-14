@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright 2008, 2011 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <fdt_support.h>
 #include <asm/mp.h>
 
@@ -13,7 +14,7 @@ DECLARE_GLOBAL_DATA_PTR;
 extern void ft_fixup_num_cores(void *blob);
 extern void ft_srio_setup(void *blob);
 
-void ft_cpu_setup(void *blob, struct bd_info *bd)
+void ft_cpu_setup(void *blob, bd_t *bd)
 {
 #ifdef CONFIG_MP
 	int off;
@@ -29,7 +30,7 @@ void ft_cpu_setup(void *blob, struct bd_info *bd)
 	do_fixup_by_prop_u32(blob, "device_type", "soc", 4,
 			     "bus-frequency", bd->bi_busfreq, 1);
 
-	fdt_fixup_memory(blob, (u64)gd->ram_base, (u64)gd->ram_size);
+	fdt_fixup_memory(blob, (u64)bd->bi_memstart, (u64)bd->bi_memsize);
 
 #ifdef CONFIG_SYS_NS16550
 	do_fixup_by_compat_u32(blob, "ns16550",

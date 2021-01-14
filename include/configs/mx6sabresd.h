@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2012 Freescale Semiconductor, Inc.
  *
  * Configuration settings for the Freescale i.MX6Q SabreSD board.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __MX6SABRESD_CONFIG_H
@@ -15,6 +16,8 @@
 #define CONFIG_MACH_TYPE	3980
 #define CONFIG_MXC_UART_BASE	UART1_BASE
 #define CONSOLE_DEV		"ttymxc0"
+
+#define CONFIG_SUPPORT_EMMC_BOOT /* eMMC specific */
 
 #include "mx6sabre_common.h"
 
@@ -29,6 +32,9 @@
 #define CONFIG_SYS_MMCSD_RAW_MODE_KERNEL_SECTOR        0x1000  /* 2MB */
 
 #define CONFIG_SYS_FSL_USDHC_NUM	3
+#if defined(CONFIG_ENV_IS_IN_MMC)
+#define CONFIG_SYS_MMC_ENV_DEV		1	/* SDHC3 */
+#endif
 
 #ifdef CONFIG_CMD_PCI
 #define CONFIG_PCI_SCAN_SHOW

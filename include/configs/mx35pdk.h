@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2010, Stefano Babic <sbabic@denx.de>
  *
@@ -7,6 +6,8 @@
  * Copyright (C) 2007, Guennadi Liakhovetski <lg@denx.de>
  *
  * Configuration for the MX35pdk Freescale board.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -20,6 +21,7 @@
 #define CONFIG_SYS_FSL_CLK
 
 /* Set TEXT at the beginning of the NOR flash */
+#define CONFIG_SYS_TEXT_BASE	0xA0000000
 
 #define CONFIG_CMDLINE_TAG		/* enable passing of ATAGs */
 #define CONFIG_REVISION_TAG
@@ -39,6 +41,8 @@
 #define CONFIG_SYS_I2C_MXC_I2C1		/* enable I2C bus 1 */
 #define CONFIG_SYS_I2C_MXC_I2C2		/* enable I2C bus 2 */
 #define CONFIG_SYS_I2C_MXC_I2C3		/* enable I2C bus 3 */
+#define CONFIG_MXC_SPI
+#define CONFIG_MXC_GPIO
 
 /*
  * PMIC Configs
@@ -59,11 +63,19 @@
 /*
  * UART (console)
  */
+#define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE	UART1_BASE
+
+/* allow to overwrite serial and ethaddr */
+#define CONFIG_ENV_OVERWRITE
+#define CONFIG_CONS_INDEX	1
 
 /*
  * Command definition
  */
+#define CONFIG_BOOTP_SUBNETMASK
+#define CONFIG_BOOTP_GATEWAY
+#define CONFIG_BOOTP_DNS
 
 #define CONFIG_NET_RETRY_COUNT	100
 
@@ -83,17 +95,27 @@
 #define IMX_FEC_BASE	FEC_BASE_ADDR
 #define CONFIG_FEC_MXC_PHYADDR	0x1F
 
+#define CONFIG_MII
+
 #define CONFIG_ARP_TIMEOUT	200UL
 
 /*
  * Miscellaneous configurable options
  */
+#define CONFIG_SYS_LONGHELP	/* undef to save memory */
+#define CONFIG_CMDLINE_EDITING
+
+#define CONFIG_AUTO_COMPLETE
+
+#define CONFIG_SYS_MEMTEST_START	0	/* memtest works on */
+#define CONFIG_SYS_MEMTEST_END		0x10000
 
 #define CONFIG_SYS_LOAD_ADDR		CONFIG_LOADADDR
 
 /*
  * Physical Memory Map
  */
+#define CONFIG_NR_DRAM_BANKS	2
 #define PHYS_SDRAM_1		CSD0_BASE_ADDR
 #define PHYS_SDRAM_1_SIZE	(128 * 1024 * 1024)
 #define PHYS_SDRAM_2		CSD1_BASE_ADDR
@@ -110,6 +132,9 @@
 /*
  * MTD Command for mtdparts
  */
+#define CONFIG_MTD_DEVICE
+#define CONFIG_FLASH_CFI_MTD
+#define CONFIG_MTD_PARTITIONS
 
 /*
  * FLASH and environment organization
@@ -121,14 +146,30 @@
 #define CONFIG_SYS_MONITOR_BASE	CONFIG_SYS_FLASH_BASE
 #define CONFIG_SYS_MONITOR_LEN		(512 * 1024)
 
+#define CONFIG_ENV_SECT_SIZE	(128 * 1024)
+#define CONFIG_ENV_SIZE		CONFIG_ENV_SECT_SIZE
+
 /* Address and size of Redundant Environment Sector	*/
+#define CONFIG_ENV_OFFSET_REDUND	(CONFIG_ENV_OFFSET + CONFIG_ENV_SIZE)
+#define CONFIG_ENV_SIZE_REDUND	CONFIG_ENV_SIZE
+
+#define CONFIG_ENV_ADDR		(CONFIG_SYS_MONITOR_BASE + \
+				CONFIG_SYS_MONITOR_LEN)
+
+#if defined(CONFIG_FSL_ENV_IN_NAND)
+	#define CONFIG_ENV_OFFSET       (1024 * 1024)
+#endif
 
 /*
  * CFI FLASH driver setup
  */
+#define CONFIG_SYS_FLASH_CFI		/* Flash memory is CFI compliant */
+#define CONFIG_FLASH_CFI_DRIVER
 
 /* A non-standard buffered write algorithm */
 #define CONFIG_FLASH_SPANSION_S29WS_N
+#define CONFIG_SYS_FLASH_USE_BUFFER_WRITE	/* faster */
+#define CONFIG_SYS_FLASH_PROTECTION	/* Use hardware sector protection */
 
 /*
  * NAND FLASH driver setup
@@ -150,6 +191,7 @@
 #define CONFIG_MXC_USB_PORTSC	(MXC_EHCI_UTMI_16BIT | MXC_EHCI_MODE_UTMI)
 
 /* mmc driver */
+#define CONFIG_FSL_ESDHC
 #define CONFIG_SYS_FSL_ESDHC_ADDR	0
 #define CONFIG_SYS_FSL_ESDHC_NUM	1
 
@@ -177,9 +219,9 @@
 	"addmisc=setenv bootargs ${bootargs} ${misc}\0"			\
 	"loadaddr=80800000\0"						\
 	"kernel_addr_r=80800000\0"					\
-	"hostname=" CONFIG_HOSTNAME "\0"			\
-	"bootfile=" CONFIG_HOSTNAME "/uImage\0"		\
-	"ramdisk_file=" CONFIG_HOSTNAME "/uRamdisk\0"	\
+	"hostname=" __stringify(CONFIG_HOSTNAME) "\0"			\
+	"bootfile=" __stringify(CONFIG_HOSTNAME) "/uImage\0"		\
+	"ramdisk_file=" __stringify(CONFIG_HOSTNAME) "/uRamdisk\0"	\
 	"flash_self=run ramargs addip addtty addmtd addmisc;"		\
 		"bootm ${kernel_addr} ${ramdisk_addr}\0"		\
 	"flash_nfs=run nfsargs addip addtty addmtd addmisc;"		\
@@ -189,7 +231,7 @@
 		"bootm ${kernel_addr_r}\0"				\
 	"net_self_load=tftp ${kernel_addr_r} ${bootfile};"		\
 		"tftp ${ramdisk_addr_r} ${ramdisk_file};\0"		\
-	"u-boot=" CONFIG_HOSTNAME "/u-boot.bin\0"		\
+	"u-boot=" __stringify(CONFIG_HOSTNAME) "/u-boot.bin\0"		\
 	"load=tftp ${loadaddr} ${u-boot}\0"				\
 	"uboot_addr=" __stringify(CONFIG_SYS_MONITOR_BASE) "\0"		\
 	"update=protect off ${uboot_addr} +80000;"			\

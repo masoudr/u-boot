@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2010 Andreas Bießmann <andreas@biessmann.org>
  *
@@ -7,11 +6,11 @@
  * (C) Copyright 2002
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Marius Groeger <mgroeger@sysgo.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <net.h>
 #include <netdev.h>
 #include <asm/mach-types.h>
 #include <asm/arch/hardware.h>
@@ -55,7 +54,7 @@ int dram_init (void)
 }
 
 #ifdef CONFIG_DRIVER_AT91EMAC
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	return at91emac_register(bis, (u32) ATMEL_BASE_EMAC);
 }

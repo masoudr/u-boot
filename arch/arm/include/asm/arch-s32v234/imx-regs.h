@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2013-2016, Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __ASM_ARCH_IMX_REGS_H__
@@ -323,6 +324,6 @@ struct mscm_ir {
 	u32 ipcie[4];		/* Interconnect Parity Checking Injection Enable Register       */
 };
 
-#endif /* __ASSEMBLY__ */
+#endif /* __ASSEMBLER__ */
 
 #endif /* __ASM_ARCH_IMX_REGS_H__ */

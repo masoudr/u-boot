@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Simulate an I2C real time clock
  *
  * Copyright (c) 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -16,7 +17,6 @@
 #include <common.h>
 #include <dm.h>
 #include <i2c.h>
-#include <log.h>
 #include <os.h>
 #include <rtc.h>
 #include <asm/rtc.h>
@@ -27,6 +27,8 @@
 #else
 #define debug_buffer(x, ...)
 #endif
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /**
  * struct sandbox_i2c_rtc_plat_data - platform data for the RTC
@@ -50,7 +52,7 @@ struct sandbox_i2c_rtc {
 long sandbox_i2c_rtc_set_offset(struct udevice *dev, bool use_system_time,
 				int offset)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(dev);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(dev);
 	long old_offset;
 
 	old_offset = plat->offset;
@@ -63,7 +65,7 @@ long sandbox_i2c_rtc_set_offset(struct udevice *dev, bool use_system_time,
 
 long sandbox_i2c_rtc_get_set_base_time(struct udevice *dev, long base_time)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(dev);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(dev);
 	long old_base_time;
 
 	old_base_time = plat->base_time;
@@ -75,7 +77,7 @@ long sandbox_i2c_rtc_get_set_base_time(struct udevice *dev, long base_time)
 
 static void reset_time(struct udevice *dev)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(dev);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(dev);
 	struct rtc_time now;
 
 	os_localtime(&now);
@@ -86,7 +88,7 @@ static void reset_time(struct udevice *dev)
 
 static int sandbox_i2c_rtc_get(struct udevice *dev, struct rtc_time *time)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(dev);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(dev);
 	struct rtc_time tm_now;
 	long now;
 
@@ -97,14 +99,12 @@ static int sandbox_i2c_rtc_get(struct udevice *dev, struct rtc_time *time)
 		now = plat->base_time;
 	}
 
-	rtc_to_tm(now + plat->offset, time);
-
-	return 0;
+	return rtc_to_tm(now + plat->offset, time);
 }
 
 static int sandbox_i2c_rtc_set(struct udevice *dev, const struct rtc_time *time)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(dev);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(dev);
 	struct rtc_time tm_now;
 	long now;
 
@@ -122,7 +122,7 @@ static int sandbox_i2c_rtc_set(struct udevice *dev, const struct rtc_time *time)
 /* Update the current time in the registers */
 static int sandbox_i2c_rtc_prepare_read(struct udevice *emul)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(emul);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(emul);
 	struct rtc_time time;
 	int ret;
 
@@ -143,7 +143,7 @@ static int sandbox_i2c_rtc_prepare_read(struct udevice *emul)
 
 static int sandbox_i2c_rtc_complete_write(struct udevice *emul)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(emul);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(emul);
 	struct rtc_time time;
 	int ret;
 
@@ -165,7 +165,7 @@ static int sandbox_i2c_rtc_complete_write(struct udevice *emul)
 static int sandbox_i2c_rtc_xfer(struct udevice *emul, struct i2c_msg *msg,
 				int nmsgs)
 {
-	struct sandbox_i2c_rtc_plat_data *plat = dev_get_plat(emul);
+	struct sandbox_i2c_rtc_plat_data *plat = dev_get_platdata(emul);
 	uint offset = 0;
 	int ret;
 
@@ -197,8 +197,7 @@ static int sandbox_i2c_rtc_xfer(struct udevice *emul, struct i2c_msg *msg,
 
 			/* Write the register */
 			memcpy(plat->reg + offset, ptr, len);
-			/* If the reset register was written to, do reset. */
-			if (offset <= REG_RESET && REG_RESET < offset + len)
+			if (offset == REG_RESET)
 				reset_time(emul);
 		}
 	}
@@ -230,7 +229,7 @@ U_BOOT_DRIVER(sandbox_i2c_rtc_emul) = {
 	.id		= UCLASS_I2C_EMUL,
 	.of_match	= sandbox_i2c_rtc_ids,
 	.bind		= sandbox_i2c_rtc_bind,
-	.priv_auto	= sizeof(struct sandbox_i2c_rtc),
-	.plat_auto	= sizeof(struct sandbox_i2c_rtc_plat_data),
+	.priv_auto_alloc_size = sizeof(struct sandbox_i2c_rtc),
+	.platdata_auto_alloc_size = sizeof(struct sandbox_i2c_rtc_plat_data),
 	.ops		= &sandbox_i2c_rtc_emul_ops,
 };

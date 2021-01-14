@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008 Texas Insturments
  *
@@ -8,13 +7,12 @@
  *
  * (C) Copyright 2002
  * Gary Jennejohn, DENX Software Engineering, <garyj@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <cpu_func.h>
-#include <irq_func.h>
-#include <asm/cache.h>
 #include <asm/system.h>
 #include <asm/secure.h>
 #include <linux/compiler.h>
@@ -33,8 +31,6 @@ void sdelay(unsigned long loops)
 			  "b.ne 1b" : "=r" (loops) : "0"(loops) : "cc");
 }
 
-void __weak board_cleanup_before_linux(void){}
-
 int cleanup_before_linux(void)
 {
 	/*
@@ -43,9 +39,6 @@ int cleanup_before_linux(void)
 	 *
 	 * disable interrupt and turn off caches etc ...
 	 */
-
-	board_cleanup_before_linux();
-
 	disable_interrupts();
 
 	/*

@@ -1,13 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2013 Soren Brinkmann <soren.brinkmann@xilinx.com>
  * Copyright (C) 2013 Xilinx, Inc. All rights reserved.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <clk.h>
 #include <common.h>
 #include <dm.h>
-#include <init.h>
-#include <malloc.h>
 #include <asm/arch/clk.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -40,7 +39,7 @@ int set_cpu_clk_info(void)
 	int i, ret;
 
 	ret = uclass_get_device_by_driver(UCLASS_CLK,
-		DM_DRIVER_GET(zynq_clk), &dev);
+		DM_GET_DRIVER(zynq_clk), &dev);
 	if (ret)
 		return ret;
 
@@ -75,7 +74,7 @@ int soc_clk_dump(void)
 	int i, ret;
 
 	ret = uclass_get_device_by_driver(UCLASS_CLK,
-		DM_DRIVER_GET(zynq_clk), &dev);
+		DM_GET_DRIVER(zynq_clk), &dev);
 	if (ret)
 		return ret;
 
@@ -95,8 +94,7 @@ int soc_clk_dump(void)
 
 			clk_free(&clk);
 
-			if ((rate == (unsigned long)-ENOSYS) ||
-			    (rate == (unsigned long)-ENXIO))
+			if (rate == (unsigned long)-ENOSYS)
 				printf("%10s%20s\n", name, "unknown");
 			else
 				printf("%10s%20lu\n", name, rate);

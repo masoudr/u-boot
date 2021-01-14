@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * caam descriptor construction helper functions
  *
  * Copyright 2008-2014 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * Based on desc_constr.h file in linux drivers/crypto/caam
  */
@@ -36,16 +37,19 @@
 			       (LDOFF_ENABLE_AUTO_NFIFO << LDST_OFFSET_SHIFT))
 
 #ifdef CONFIG_PHYS_64BIT
-struct ptr_addr_t {
+union ptr_addr_t {
+	u64 m_whole;
+	struct {
 #ifdef CONFIG_SYS_FSL_SEC_LE
-	u32 low;
-	u32 high;
+		u32 low;
+		u32 high;
 #elif defined(CONFIG_SYS_FSL_SEC_BE)
-	u32 high;
-	u32 low;
+		u32 high;
+		u32 low;
 #else
 #error Neither CONFIG_SYS_FSL_SEC_LE nor CONFIG_SYS_FSL_SEC_BE is defined
 #endif
+	} m_halfs;
 };
 #endif
 
@@ -54,10 +58,9 @@ static inline void pdb_add_ptr(dma_addr_t *offset, dma_addr_t ptr)
 #ifdef CONFIG_PHYS_64BIT
 	/* The Position of low and high part of 64 bit address
 	 * will depend on the endianness of CAAM Block */
-	struct ptr_addr_t *ptr_addr = (struct ptr_addr_t *)offset;
-
-	ptr_addr->high = (u32)(ptr >> 32);
-	ptr_addr->low = (u32)ptr;
+	union ptr_addr_t *ptr_addr = (union ptr_addr_t *)offset;
+	ptr_addr->m_halfs.high = (u32)(ptr >> 32);
+	ptr_addr->m_halfs.low = (u32)ptr;
 #else
 	*offset = ptr;
 #endif
@@ -109,10 +112,9 @@ static inline void append_ptr(u32 *desc, dma_addr_t ptr)
 #ifdef CONFIG_PHYS_64BIT
 	/* The Position of low and high part of 64 bit address
 	 * will depend on the endianness of CAAM Block */
-	struct ptr_addr_t *ptr_addr = (struct ptr_addr_t *)offset;
-
-	ptr_addr->high = (u32)(ptr >> 32);
-	ptr_addr->low = (u32)ptr;
+	union ptr_addr_t *ptr_addr = (union ptr_addr_t *)offset;
+	ptr_addr->m_halfs.high = (u32)(ptr >> 32);
+	ptr_addr->m_halfs.low = (u32)ptr;
 #else
 	*offset = ptr;
 #endif

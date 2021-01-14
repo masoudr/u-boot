@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /* Copyright (C) 2011
  * Corscience GmbH & Co. KG - Simon Schwarz <schwarz@corscience.de>
  *  - Added prep subcommand support
@@ -9,22 +8,18 @@
  * Marius Groeger <mgroeger@sysgo.de>
  *
  * Copyright (C) 2001  Erik Mouw (J.A.K.Mouw@its.tudelft.nl)
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <bootstage.h>
 #include <command.h>
-#include <cpu_func.h>
 #include <dm.h>
-#include <hang.h>
-#include <lmb.h>
-#include <log.h>
 #include <dm/root.h>
-#include <env.h>
 #include <image.h>
 #include <u-boot/zlib.h>
 #include <asm/byteorder.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <mapmem.h>
 #include <fdt_support.h>
 #include <asm/bootm.h>
@@ -32,7 +27,6 @@
 #include <linux/compiler.h>
 #include <bootm.h>
 #include <vxworks.h>
-#include <asm/cache.h>
 
 #ifdef CONFIG_ARMV7_NONSEC
 #include <asm/armv7.h>
@@ -53,8 +47,7 @@ static ulong get_sp(void)
 
 void arch_lmb_reserve(struct lmb *lmb)
 {
-	ulong sp, bank_end;
-	int bank;
+	ulong sp;
 
 	/*
 	 * Booting a (Linux) kernel image
@@ -70,21 +63,8 @@ void arch_lmb_reserve(struct lmb *lmb)
 
 	/* adjust sp by 4K to be safe */
 	sp -= 4096;
-	for (bank = 0; bank < CONFIG_NR_DRAM_BANKS; bank++) {
-		if (!gd->bd->bi_dram[bank].size ||
-		    sp < gd->bd->bi_dram[bank].start)
-			continue;
-		/* Watch out for RAM at end of address space! */
-		bank_end = gd->bd->bi_dram[bank].start +
-			gd->bd->bi_dram[bank].size - 1;
-		if (sp > bank_end)
-			continue;
-		if (bank_end > gd->ram_top)
-			bank_end = gd->ram_top - 1;
-
-		lmb_reserve(lmb, sp, bank_end - sp + 1);
-		break;
-	}
+	lmb_reserve(lmb, sp,
+		    gd->bd->bi_dram[0].start + gd->bd->bi_dram[0].size - sp);
 }
 
 __weak void board_quiesce_devices(void)
@@ -98,6 +78,8 @@ __weak void board_quiesce_devices(void)
  */
 static void announce_and_cleanup(int fake)
 {
+	printf("\nStarting kernel ...%s\n\n", fake ?
+		"(fake run for tracing)" : "");
 	bootstage_mark_name(BOOTSTAGE_ID_BOOTM_HANDOFF, "start_kernel");
 #ifdef CONFIG_BOOTSTAGE_FDT
 	bootstage_fdt_add_report();
@@ -112,8 +94,6 @@ static void announce_and_cleanup(int fake)
 
 	board_quiesce_devices();
 
-	printf("\nStarting kernel ...%s\n\n", fake ?
-		"(fake run for tracing)" : "");
 	/*
 	 * Call remove function of all devices with a removal flag set.
 	 * This may be useful for last-stage operations, like cancelling
@@ -124,7 +104,7 @@ static void announce_and_cleanup(int fake)
 	cleanup_before_linux();
 }
 
-static void setup_start_tag (struct bd_info *bd)
+static void setup_start_tag (bd_t *bd)
 {
 	params = (struct tag *)bd->bi_boot_params;
 
@@ -138,7 +118,7 @@ static void setup_start_tag (struct bd_info *bd)
 	params = tag_next (params);
 }
 
-static void setup_memory_tags(struct bd_info *bd)
+static void setup_memory_tags(bd_t *bd)
 {
 	int i;
 
@@ -153,7 +133,7 @@ static void setup_memory_tags(struct bd_info *bd)
 	}
 }
 
-static void setup_commandline_tag(struct bd_info *bd, char *commandline)
+static void setup_commandline_tag(bd_t *bd, char *commandline)
 {
 	char *p;
 
@@ -178,8 +158,7 @@ static void setup_commandline_tag(struct bd_info *bd, char *commandline)
 	params = tag_next (params);
 }
 
-static void setup_initrd_tag(struct bd_info *bd, ulong initrd_start,
-			     ulong initrd_end)
+static void setup_initrd_tag(bd_t *bd, ulong initrd_start, ulong initrd_end)
 {
 	/* an ATAG_INITRD node tells the kernel where the compressed
 	 * ramdisk can be found. ATAG_RDIMG is a better name, actually.
@@ -218,7 +197,7 @@ static void setup_revision_tag(struct tag **in_params)
 	params = tag_next (params);
 }
 
-static void setup_end_tag(struct bd_info *bd)
+static void setup_end_tag(bd_t *bd)
 {
 	params->hdr.tag = ATAG_NONE;
 	params->hdr.size = 0;
@@ -233,8 +212,6 @@ static void do_nonsec_virt_switch(void)
 	dcache_disable();	/* flush cache before swtiching to EL2 */
 }
 #endif
-
-__weak void board_prep_linux(bootm_headers_t *images) { }
 
 /* Subcommand: PREP */
 static void boot_prep_linux(bootm_headers_t *images)
@@ -282,8 +259,6 @@ static void boot_prep_linux(bootm_headers_t *images)
 		printf("FDT and ATAGS support not compiled in - hanging\n");
 		hang();
 	}
-
-	board_prep_linux(images);
 }
 
 __weak bool armv7_boot_nonsec_default(void)
@@ -424,7 +399,7 @@ static void boot_jump_linux(bootm_headers_t *images, int flag)
  * DIFFERENCE: Instead of calling prep and go at the end
  * they are called if subcommand is equal 0.
  */
-int do_bootm_linux(int flag, int argc, char *const argv[],
+int do_bootm_linux(int flag, int argc, char * const argv[],
 		   bootm_headers_t *images)
 {
 	/* No need for those on ARM */
@@ -454,7 +429,7 @@ void boot_prep_vxworks(bootm_headers_t *images)
 
 	if (images->ft_addr) {
 		off = fdt_path_offset(images->ft_addr, "/memory");
-		if (off > 0) {
+		if (off < 0) {
 			if (arch_fixup_fdt(images->ft_addr))
 				puts("## WARNING: fixup memory failed!\n");
 		}
@@ -464,11 +439,6 @@ void boot_prep_vxworks(bootm_headers_t *images)
 }
 void boot_jump_vxworks(bootm_headers_t *images)
 {
-#if defined(CONFIG_ARM64) && defined(CONFIG_ARMV8_PSCI)
-	armv8_setup_psci();
-	smp_kick_all_cpus();
-#endif
-
 	/* ARM VxWorks requires device tree physical address to be passed */
 	((void (*)(void *))images->ep)(images->ft_addr);
 }

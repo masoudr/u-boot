@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2012,2015 Stephen Warren
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _BCM2835_MSG_H
@@ -17,10 +18,9 @@ int bcm2835_power_on_module(u32 module);
 /**
  * bcm2835_get_mmc_clock() - get the frequency of the MMC clock
  *
- * @clock_id: ID of clock to get frequency for
  * @return clock frequency, or -ve on error
  */
-int bcm2835_get_mmc_clock(u32 clock_id);
+int bcm2835_get_mmc_clock(void);
 
 /**
  * bcm2835_get_video_size() - get the current display size
@@ -47,12 +47,5 @@ int bcm2835_get_video_size(int *widthp, int *heightp);
 int bcm2835_set_video_params(int *widthp, int *heightp, int depth_bpp,
 			     int pixel_order, int alpha_mode, ulong *fb_basep,
 			     ulong *fb_sizep, int *pitchp);
-
-/**
- * bcm2711_load_vl805_firmware() - get vl805's firmware loaded
- *
- * @return 0 if OK, -EIO on error
- */
-int bcm2711_notify_vl805_reset(void);
 
 #endif

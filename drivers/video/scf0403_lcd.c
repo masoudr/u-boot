@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * scf0403.c -- support for DataImage SCF0403 LCD
  *
@@ -11,13 +10,13 @@
  *	Marek Vasut work in l4f00242t03.c
  *
  * U-Boot port: Nikita Kiryanov <nikita@compulab.co.il>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <malloc.h>
 #include <asm/gpio.h>
 #include <spi.h>
-#include <linux/delay.h>
 
 struct scf0403_cmd {
 	u16 cmd;

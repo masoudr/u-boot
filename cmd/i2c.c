@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009
  * Sergey Kubushyn, himself, ksi@koi8.net
@@ -7,6 +6,8 @@
  *
  * (C) Copyright 2001
  * Gerald Van Baren, Custom IDEAS, vanbaren@cideas.com.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -71,14 +72,14 @@
 #include <console.h>
 #include <dm.h>
 #include <edid.h>
+#include <environment.h>
 #include <errno.h>
 #include <i2c.h>
-#include <log.h>
 #include <malloc.h>
 #include <asm/byteorder.h>
 #include <linux/compiler.h>
-#include <linux/delay.h>
-#include <u-boot/crc.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /* Display values from last command.
  * Memory modify remembered values are different from display memory.
@@ -290,8 +291,7 @@ static int i2c_report_err(int ret, enum i2c_err_op op)
  * Syntax:
  *	i2c read {i2c_chip} {devaddr}{.0, .1, .2} {len} {memaddr}
  */
-static int do_i2c_read(struct cmd_tbl *cmdtp, int flag, int argc,
-		       char *const argv[])
+static int do_i2c_read ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	uint	devaddr, length;
@@ -344,8 +344,7 @@ static int do_i2c_read(struct cmd_tbl *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static int do_i2c_write(struct cmd_tbl *cmdtp, int flag, int argc,
-			char *const argv[])
+static int do_i2c_write(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	uint	devaddr, length;
@@ -390,7 +389,7 @@ static int do_i2c_write(struct cmd_tbl *cmdtp, int flag, int argc,
 		ret = i2c_set_chip_offset_len(dev, alen);
 	if (ret)
 		return i2c_report_err(ret, I2C_ERR_WRITE);
-	i2c_chip = dev_get_parent_plat(dev);
+	i2c_chip = dev_get_parent_platdata(dev);
 	if (!i2c_chip)
 		return i2c_report_err(ret, I2C_ERR_WRITE);
 #endif
@@ -436,7 +435,7 @@ static int do_i2c_write(struct cmd_tbl *cmdtp, int flag, int argc,
 }
 
 #ifdef CONFIG_DM_I2C
-static int do_i2c_flags(struct cmd_tbl *cmdtp, int flag, int argc,
+static int do_i2c_flags(cmd_tbl_t *cmdtp, int flag, int argc,
 			char *const argv[])
 {
 	struct udevice *dev;
@@ -466,8 +465,7 @@ static int do_i2c_flags(struct cmd_tbl *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static int do_i2c_olen(struct cmd_tbl *cmdtp, int flag, int argc,
-		       char *const argv[])
+static int do_i2c_olen(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
 	struct udevice *dev;
 	uint olen;
@@ -512,8 +510,7 @@ static int do_i2c_olen(struct cmd_tbl *cmdtp, int flag, int argc,
  * Syntax:
  *	i2c md {i2c_chip} {addr}{.0, .1, .2} {len}
  */
-static int do_i2c_md(struct cmd_tbl *cmdtp, int flag, int argc,
-		     char *const argv[])
+static int do_i2c_md ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	uint	addr, length;
@@ -632,8 +629,7 @@ static int do_i2c_md(struct cmd_tbl *cmdtp, int flag, int argc,
  * Syntax:
  *	i2c mw {i2c_chip} {addr}{.0, .1, .2} {data} [{count}]
  */
-static int do_i2c_mw(struct cmd_tbl *cmdtp, int flag, int argc,
-		     char *const argv[])
+static int do_i2c_mw ( cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	ulong	addr;
@@ -719,8 +715,7 @@ static int do_i2c_mw(struct cmd_tbl *cmdtp, int flag, int argc,
  * Syntax:
  *	i2c crc32 {i2c_chip} {addr}{.0, .1, .2} {count}
  */
-static int do_i2c_crc(struct cmd_tbl *cmdtp, int flag, int argc,
-		      char *const argv[])
+static int do_i2c_crc (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	ulong	addr;
@@ -777,7 +772,7 @@ static int do_i2c_crc(struct cmd_tbl *cmdtp, int flag, int argc,
 #endif
 		if (ret)
 			err++;
-		crc = crc32(crc, &byte, 1);
+		crc = crc32 (crc, &byte, 1);
 		addr++;
 	}
 	if (err > 0)
@@ -804,8 +799,8 @@ static int do_i2c_crc(struct cmd_tbl *cmdtp, int flag, int argc,
  *	i2c mm{.b, .w, .l} {i2c_chip} {addr}{.0, .1, .2}
  *	i2c nm{.b, .w, .l} {i2c_chip} {addr}{.0, .1, .2}
  */
-static int mod_i2c_mem(struct cmd_tbl *cmdtp, int incrflag, int flag, int argc,
-		       char *const argv[])
+static int
+mod_i2c_mem(cmd_tbl_t *cmdtp, int incrflag, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	ulong	addr;
@@ -953,8 +948,7 @@ static int mod_i2c_mem(struct cmd_tbl *cmdtp, int incrflag, int flag, int argc,
  *
  * Returns zero (success) if one or more I2C devices was found
  */
-static int do_i2c_probe(struct cmd_tbl *cmdtp, int flag, int argc,
-			char *const argv[])
+static int do_i2c_probe (cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	int j;
 	int addr = -1;
@@ -1029,8 +1023,7 @@ static int do_i2c_probe(struct cmd_tbl *cmdtp, int flag, int argc,
  *	{length} - Number of bytes to read
  *	{delay}  - A DECIMAL number and defaults to 1000 uSec
  */
-static int do_i2c_loop(struct cmd_tbl *cmdtp, int flag, int argc,
-		       char *const argv[])
+static int do_i2c_loop(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	uint	chip;
 	int alen;
@@ -1156,8 +1149,7 @@ static void decode_bits (u_char const b, char const *str[], int const do_once)
  * Syntax:
  *	i2c sdram {i2c_chip}
  */
-static int do_sdram(struct cmd_tbl *cmdtp, int flag, int argc,
-		    char *const argv[])
+static int do_sdram (cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	enum { unknown, EDO, SDRAM, DDR, DDR2, DDR3, DDR4 } type;
 
@@ -1659,7 +1651,7 @@ static int do_sdram(struct cmd_tbl *cmdtp, int flag, int argc,
  *	i2c edid {i2c_chip}
  */
 #if defined(CONFIG_I2C_EDID)
-int do_edid(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_edid(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
 	uint chip;
 	struct edid1_info edid;
@@ -1700,14 +1692,14 @@ static void show_bus(struct udevice *bus)
 {
 	struct udevice *dev;
 
-	printf("Bus %d:\t%s", dev_seq(bus), bus->name);
+	printf("Bus %d:\t%s", bus->req_seq, bus->name);
 	if (device_active(bus))
-		printf("  (active %d)", dev_seq(bus));
+		printf("  (active %d)", bus->seq);
 	printf("\n");
 	for (device_find_first_child(bus, &dev);
 	     dev;
 	     device_find_next_child(&dev)) {
-		struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
+		struct dm_i2c_chip *chip = dev_get_parent_platdata(dev);
 
 		printf("   %02x: %s, offset len %x, flags %x\n",
 		       chip->chip_addr, dev->name, chip->offset_len,
@@ -1726,8 +1718,8 @@ static void show_bus(struct udevice *bus)
  * Returns zero always.
  */
 #if defined(CONFIG_SYS_I2C) || defined(CONFIG_DM_I2C)
-static int do_i2c_show_bus(struct cmd_tbl *cmdtp, int flag, int argc,
-			   char *const argv[])
+static int do_i2c_show_bus(cmd_tbl_t *cmdtp, int flag, int argc,
+				char * const argv[])
 {
 	if (argc == 1) {
 		/* show all busses */
@@ -1813,8 +1805,8 @@ static int do_i2c_show_bus(struct cmd_tbl *cmdtp, int flag, int argc,
  */
 #if defined(CONFIG_SYS_I2C) || defined(CONFIG_I2C_MULTI_BUS) || \
 		defined(CONFIG_DM_I2C)
-static int do_i2c_bus_num(struct cmd_tbl *cmdtp, int flag, int argc,
-			  char *const argv[])
+static int do_i2c_bus_num(cmd_tbl_t *cmdtp, int flag, int argc,
+				char * const argv[])
 {
 	int		ret = 0;
 	int	bus_no;
@@ -1825,7 +1817,7 @@ static int do_i2c_bus_num(struct cmd_tbl *cmdtp, int flag, int argc,
 		struct udevice *bus;
 
 		if (!i2c_get_cur_bus(&bus))
-			bus_no = dev_seq(bus);
+			bus_no = bus->seq;
 		else
 			bus_no = -1;
 #else
@@ -1864,8 +1856,7 @@ static int do_i2c_bus_num(struct cmd_tbl *cmdtp, int flag, int argc,
  * Returns zero on success, CMD_RET_USAGE in case of misuse and negative
  * on error.
  */
-static int do_i2c_bus_speed(struct cmd_tbl *cmdtp, int flag, int argc,
-			    char *const argv[])
+static int do_i2c_bus_speed(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	int speed, ret=0;
 
@@ -1908,8 +1899,7 @@ static int do_i2c_bus_speed(struct cmd_tbl *cmdtp, int flag, int argc,
  * Returns zero on success, CMD_RET_USAGE in case of misuse and negative
  * on error.
  */
-static int do_i2c_mm(struct cmd_tbl *cmdtp, int flag, int argc,
-		     char *const argv[])
+static int do_i2c_mm(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	return mod_i2c_mem (cmdtp, 1, flag, argc, argv);
 }
@@ -1924,8 +1914,7 @@ static int do_i2c_mm(struct cmd_tbl *cmdtp, int flag, int argc,
  * Returns zero on success, CMD_RET_USAGE in case of misuse and negative
  * on error.
  */
-static int do_i2c_nm(struct cmd_tbl *cmdtp, int flag, int argc,
-		     char *const argv[])
+static int do_i2c_nm(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 	return mod_i2c_mem (cmdtp, 0, flag, argc, argv);
 }
@@ -1939,8 +1928,7 @@ static int do_i2c_nm(struct cmd_tbl *cmdtp, int flag, int argc,
  *
  * Returns zero always.
  */
-static int do_i2c_reset(struct cmd_tbl *cmdtp, int flag, int argc,
-			char *const argv[])
+static int do_i2c_reset(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
 #if defined(CONFIG_DM_I2C)
 	struct udevice *bus;
@@ -1959,7 +1947,7 @@ static int do_i2c_reset(struct cmd_tbl *cmdtp, int flag, int argc,
 	return 0;
 }
 
-static struct cmd_tbl cmd_i2c_sub[] = {
+static cmd_tbl_t cmd_i2c_sub[] = {
 #if defined(CONFIG_SYS_I2C) || defined(CONFIG_DM_I2C)
 	U_BOOT_CMD_MKENT(bus, 1, 1, do_i2c_show_bus, "", ""),
 #endif
@@ -2010,9 +1998,9 @@ static __maybe_unused void i2c_reloc(void)
  * Returns zero on success, CMD_RET_USAGE in case of misuse and negative
  * on error.
  */
-static int do_i2c(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+static int do_i2c(cmd_tbl_t * cmdtp, int flag, int argc, char * const argv[])
 {
-	struct cmd_tbl *c;
+	cmd_tbl_t *c;
 
 #ifdef CONFIG_NEEDS_MANUAL_RELOC
 	i2c_reloc();
@@ -2038,7 +2026,6 @@ static int do_i2c(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 static char i2c_help_text[] =
 #if defined(CONFIG_SYS_I2C) || defined(CONFIG_DM_I2C)
 	"bus [muxtype:muxaddr:muxchannel] - show I2C bus info\n"
-	"i2c " /* That's the prefix for the crc32 command below. */
 #endif
 	"crc32 chip address[.0, .1, .2] count - compute CRC32 checksum\n"
 #if defined(CONFIG_SYS_I2C) || \

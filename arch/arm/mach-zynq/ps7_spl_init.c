@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (c) Copyright 2010-2017 Xilinx, Inc. All rights reserved.
  * (c) Copyright 2016 Topic Embedded Products.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <asm/io.h>
@@ -57,7 +58,7 @@ static void perf_start_clock(void)
 }
 
 /* Compute mask for given delay in miliseconds*/
-static unsigned long get_number_of_cycles_for_delay(unsigned long delay)
+static int get_number_of_cycles_for_delay(unsigned int delay)
 {
 	return (APU_FREQ / (2 * 1000)) * delay;
 }
@@ -91,7 +92,7 @@ int __weak ps7_config(unsigned long *ps7_config_init)
 	unsigned long mask;
 	unsigned int numargs;
 	int i;
-	unsigned long delay;
+	int delay;
 
 	for (;;) {
 		opcode = ptr[0];

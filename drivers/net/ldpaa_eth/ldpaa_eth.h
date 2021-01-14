@@ -1,7 +1,8 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
- * Copyright 2014-2016 Freescale Semiconductor, Inc.
+ * Copyright (C) 2014-2016 Freescale Semiconductor
  * Copyright 2017 NXP
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __LDPAA_ETH_H
@@ -116,13 +117,7 @@ struct ldpaa_fas {
 					 LDPAA_ETH_FAS_TIDE)
 
 struct ldpaa_eth_priv {
-#ifdef CONFIG_DM_ETH
-	struct phy_device *phy;
-	int phy_mode;
-	bool started;
-#else
 	struct eth_device *net_dev;
-#endif
 	uint32_t dpmac_id;
 	uint16_t dpmac_handle;
 
@@ -133,6 +128,7 @@ struct ldpaa_eth_priv {
 	uint16_t tx_flow_id;
 
 	enum ldpaa_eth_type type;	/* 1G or 10G ethernet */
+	struct phy_device *phydev;
 };
 
 struct dprc_endpoint dpmac_endpoint;

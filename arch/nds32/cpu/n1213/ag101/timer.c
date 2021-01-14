@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009 Faraday Technology
  * Po-Yu Chuang <ratbert@faraday-tech.com>
@@ -6,16 +5,13 @@
  * Copyright (C) 2011 Andes Technology Corporation
  * Shawn Lin, Andes Technology Corporation <nobuhiro@andestech.com>
  * Macpaul Lin, Andes Technology Corporation <macpaul@andestech.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #ifndef CONFIG_TIMER
 #include <common.h>
-#include <init.h>
-#include <irq_func.h>
-#include <log.h>
-#include <time.h>
 #include <asm/io.h>
 #include <faraday/fttmr010.h>
-#include <linux/delay.h>
 
 static ulong timestamp;
 static ulong lastdec;

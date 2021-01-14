@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2009 Sergey Kubushyn <ksi@koi8.net>
  *
@@ -6,10 +5,11 @@
  * Heiko Schocher, DENX Software Engineering, hs@denx.de.
  *
  * Multibus/multiadapter I2C core functions (wrappers)
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
 #include <i2c.h>
-#include <linker_lists.h>
 
 struct i2c_adapter *i2c_get_adapter(int index)
 {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2007, 2010 Freescale Semiconductor, Inc.
  *
@@ -7,6 +6,8 @@
  * Description:
  * ULI 526x Ethernet port driver.
  * Based on the Linux driver: drivers/net/tulip/uli526x.c
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -16,7 +17,6 @@
 #include <asm/io.h>
 #include <pci.h>
 #include <miiphy.h>
-#include <linux/delay.h>
 
 /* some kernel function compatible define */
 
@@ -184,7 +184,7 @@ static void uli526x_init(struct eth_device *);
 static void uli526x_set_phyxcer(struct uli526x_board_info *);
 
 
-static int uli526x_init_one(struct eth_device *, struct bd_info *);
+static int uli526x_init_one(struct eth_device *, bd_t *);
 static void uli526x_disable(struct eth_device *);
 static void set_mac_addr(struct eth_device *);
 
@@ -200,7 +200,7 @@ static struct pci_device_id uli526x_pci_tbl[] = {
  *	Search ULI526X board, register it
  */
 
-int uli526x_initialize(struct bd_info *bis)
+int uli526x_initialize(bd_t *bis)
 {
 	pci_dev_t devno;
 	int card_number = 0;
@@ -255,7 +255,7 @@ int uli526x_initialize(struct bd_info *bis)
 	return card_number;
 }
 
-static int uli526x_init_one(struct eth_device *dev, struct bd_info *bis)
+static int uli526x_init_one(struct eth_device *dev, bd_t *bis)
 {
 
 	struct uli526x_board_info *db = dev->priv;

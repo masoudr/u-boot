@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * PCF8575 I2C GPIO EXPANDER DRIVER
  *
  * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
  *
  * Vignesh R <vigneshr@ti.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  *
  *
  * Driver for TI PCF-8575 16-bit I2C gpio expander. Based on
@@ -26,9 +27,7 @@
 #include <common.h>
 #include <dm.h>
 #include <i2c.h>
-#include <log.h>
 #include <asm-generic/gpio.h>
-#include <linux/bitops.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -55,7 +54,7 @@ struct pcf8575_chip {
 
 static int pcf8575_i2c_write_le16(struct udevice *dev, unsigned int word)
 {
-	struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
+	struct dm_i2c_chip *chip = dev_get_parent_platdata(dev);
 	u8 buf[2] = { word & 0xff, word >> 8, };
 	int ret;
 
@@ -69,7 +68,7 @@ static int pcf8575_i2c_write_le16(struct udevice *dev, unsigned int word)
 
 static int pcf8575_i2c_read_le16(struct udevice *dev)
 {
-	struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
+	struct dm_i2c_chip *chip = dev_get_parent_platdata(dev);
 	u8 buf[2];
 	int ret;
 
@@ -85,7 +84,7 @@ static int pcf8575_i2c_read_le16(struct udevice *dev)
 
 static int pcf8575_direction_input(struct udevice *dev, unsigned offset)
 {
-	struct pcf8575_chip *plat = dev_get_plat(dev);
+	struct pcf8575_chip *plat = dev_get_platdata(dev);
 	int status;
 
 	plat->out |= BIT(offset);
@@ -97,7 +96,7 @@ static int pcf8575_direction_input(struct udevice *dev, unsigned offset)
 static int pcf8575_direction_output(struct udevice *dev,
 				    unsigned int offset, int value)
 {
-	struct pcf8575_chip *plat = dev_get_plat(dev);
+	struct pcf8575_chip *plat = dev_get_platdata(dev);
 	int ret;
 
 	if (value)
@@ -125,9 +124,9 @@ static int pcf8575_set_value(struct udevice *dev, unsigned int offset,
 	return pcf8575_direction_output(dev, offset, value);
 }
 
-static int pcf8575_ofdata_plat(struct udevice *dev)
+static int pcf8575_ofdata_platdata(struct udevice *dev)
 {
-	struct pcf8575_chip *plat = dev_get_plat(dev);
+	struct pcf8575_chip *plat = dev_get_platdata(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 
 	int n_latch;
@@ -175,7 +174,7 @@ U_BOOT_DRIVER(gpio_pcf8575) = {
 	.id	= UCLASS_GPIO,
 	.ops	= &pcf8575_gpio_ops,
 	.of_match = pcf8575_gpio_ids,
-	.of_to_plat = pcf8575_ofdata_plat,
+	.ofdata_to_platdata = pcf8575_ofdata_platdata,
 	.probe	= pcf8575_gpio_probe,
-	.plat_auto	= sizeof(struct pcf8575_chip),
+	.platdata_auto_alloc_size = sizeof(struct pcf8575_chip),
 };

@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2016 Google, Inc
+ *
+ * SPDX-License-Identifier:      GPL-2.0+
  */
 
 OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
@@ -9,7 +10,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-	. = 0x00000010;
+	. = 0x00000000;
 	_start = .;
 
 	. = ALIGN(4);
@@ -25,6 +26,5 @@ SECTIONS
 		KEEP(*(SORT(.binman_sym*)));
 		__binman_sym_end = .;
 	}
-	.interp : { *(.interp*) }
 
 }

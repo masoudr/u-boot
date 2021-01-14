@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  *
  * (C) Copyright 2000-2004
@@ -6,11 +5,12 @@
  *
  * Copyright (C) 2004-2007, 2012 Freescale Semiconductor, Inc.
  * TsiChung Liew (Tsi-Chung.Liew@freescale.com)
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /* CPU specific interrupt routine */
 #include <common.h>
-#include <irq_func.h>
 #include <asm/immap.h>
 #include <asm/io.h>
 

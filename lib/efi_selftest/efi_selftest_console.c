@@ -1,16 +1,16 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * EFI efi_selftest
  *
  * Copyright (c) 2017 Heinrich Schuchardt <xypron.glpk@gmx.de>
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 
 #include <efi_selftest.h>
-#include <net.h>
 #include <vsprintf.h>
 
 struct efi_simple_text_output_protocol *con_out;
-struct efi_simple_text_input_protocol *con_in;
+struct efi_simple_input_interface *con_in;
 
 /*
  * Print a MAC address to an u16 string
@@ -44,28 +44,25 @@ static void mac(void *pointer, u16 **buf)
 }
 
 /*
- * printx() - print hexadecimal number to an u16 string
+ * Print a pointer to an u16 string
  *
- * @pointer:	pointer
- * @prec:	minimum number of digits to print
- * @buf:	pointer to buffer address,
- *		on return position of terminating zero word
- * @size:	size of value to be printed in bytes
+ * @pointer: pointer
+ * @buf: pointer to buffer address
+ * on return position of terminating zero word
  */
-static void printx(u64 p, int prec, u16 **buf)
+static void pointer(void *pointer, u16 **buf)
 {
 	int i;
 	u16 c;
+	uintptr_t p = (uintptr_t)pointer;
 	u16 *pos = *buf;
 
-	for (i = 2 * sizeof(p) - 1; i >= 0; --i) {
-		c = (p >> (4 * i)) & 0x0f;
-		if (c || pos != *buf || !i || i < prec) {
-			c += '0';
-			if (c > '9')
-				c += 'a' - '9' - 1;
-			*pos++ = c;
-		}
+	for (i = 8 * sizeof(p) - 4; i >= 0; i -= 4) {
+		c = (p >> i) & 0x0f;
+		c += '0';
+		if (c > '9')
+			c += 'a' - '9' - 1;
+		*pos++ = c;
 	}
 	*pos = 0;
 	*buf = pos;
@@ -74,12 +71,11 @@ static void printx(u64 p, int prec, u16 **buf)
 /*
  * Print an unsigned 32bit value as decimal number to an u16 string
  *
- * @value:	value to be printed
- * @prec:	minimum number of digits to display
- * @buf:	pointer to buffer address
- *		on return position of terminating zero word
+ * @value: value to be printed
+ * @buf: pointer to buffer address
+ * on return position of terminating zero word
  */
-static void uint2dec(u32 value, int prec, u16 **buf)
+static void uint2dec(u32 value, u16 **buf)
 {
 	u16 *pos = *buf;
 	int i;
@@ -98,7 +94,7 @@ static void uint2dec(u32 value, int prec, u16 **buf)
 	for (i = 0; i < 10; ++i) {
 		/* Write current digit */
 		c = f >> 60;
-		if (c || pos != *buf || 10 - i <= prec)
+		if (c || pos != *buf)
 			*pos++ = c + '0';
 		/* Eliminate current digit */
 		f &= 0xfffffffffffffff;
@@ -114,12 +110,11 @@ static void uint2dec(u32 value, int prec, u16 **buf)
 /*
  * Print a signed 32bit value as decimal number to an u16 string
  *
- * @value:	value to be printed
- * @prec:	minimum number of digits to display
- * @buf:	pointer to buffer address
+ * @value: value to be printed
+ * @buf: pointer to buffer address
  * on return position of terminating zero word
  */
-static void int2dec(s32 value, int prec, u16 **buf)
+static void int2dec(s32 value, u16 **buf)
 {
 	u32 u;
 	u16 *pos = *buf;
@@ -130,31 +125,27 @@ static void int2dec(s32 value, int prec, u16 **buf)
 	} else {
 		u = value;
 	}
-	uint2dec(u, prec, &pos);
+	uint2dec(u, &pos);
 	*buf = pos;
 }
 
 /*
- * Print a colored formatted string to the EFI console
+ * Print a formatted string to the EFI console
  *
- * @color	color, see constants in efi_api.h, use -1 for no color
- * @fmt		format string
- * @...		optional arguments
+ * @fmt: format string
+ * @...: optional arguments
  */
-void efi_st_printc(int color, const char *fmt, ...)
+void efi_st_printf(const char *fmt, ...)
 {
 	va_list args;
 	u16 buf[160];
 	const char *c;
 	u16 *pos = buf;
 	const char *s;
-	u16 *u;
-	int prec;
+	const u16 *u;
 
 	va_start(args, fmt);
 
-	if (color >= 0)
-		con_out->set_attribute(con_out, (unsigned long)color);
 	c = fmt;
 	for (; *c; ++c) {
 		switch (*c) {
@@ -179,20 +170,12 @@ void efi_st_printc(int color, const char *fmt, ...)
 			break;
 		case '%':
 			++c;
-			/* Parse precision */
-			if (*c == '.') {
-				++c;
-				prec = *c - '0';
-				++c;
-			} else {
-				prec = 0;
-			}
 			switch (*c) {
 			case '\0':
 				--c;
 				break;
 			case 'd':
-				int2dec(va_arg(args, s32), prec, &pos);
+				int2dec(va_arg(args, s32), &pos);
 				break;
 			case 'p':
 				++c;
@@ -205,19 +188,13 @@ void efi_st_printc(int color, const char *fmt, ...)
 				/* u16 string */
 				case 's':
 					u = va_arg(args, u16*);
-					if (pos > buf) {
-						*pos = 0;
-						con_out->output_string(con_out,
-								       buf);
-					}
-					con_out->output_string(con_out, u);
-					pos = buf;
+					/* Ensure string fits into buffer */
+					for (; *u && pos < buf + 120; ++u)
+						*pos++ = *u;
 					break;
 				default:
 					--c;
-					printx((uintptr_t)va_arg(args, void *),
-					       2 * sizeof(void *), &pos);
-					break;
+					pointer(va_arg(args, void*), &pos);
 				}
 				break;
 			case 's':
@@ -226,11 +203,7 @@ void efi_st_printc(int color, const char *fmt, ...)
 					*pos++ = *s;
 				break;
 			case 'u':
-				uint2dec(va_arg(args, u32), prec, &pos);
-				break;
-			case 'x':
-				printx((u64)va_arg(args, unsigned int),
-				       prec, &pos);
+				uint2dec(va_arg(args, u32), &pos);
 				break;
 			default:
 				break;
@@ -243,8 +216,6 @@ void efi_st_printc(int color, const char *fmt, ...)
 	va_end(args);
 	*pos = 0;
 	con_out->output_string(con_out, buf);
-	if (color >= 0)
-		con_out->set_attribute(con_out, EFI_LIGHTGRAY);
 }
 
 /*

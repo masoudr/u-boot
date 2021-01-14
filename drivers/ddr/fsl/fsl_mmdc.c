@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2016 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 
 /*
@@ -10,7 +11,6 @@
 #include <common.h>
 #include <fsl_mmdc.h>
 #include <asm/io.h>
-#include <linux/delay.h>
 
 static void set_wait_for_bits_clear(void *ptr, u32 value, u32 bits)
 {

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Simon Guinot <sguinot@lacie.com>
  *
@@ -6,13 +5,12 @@
  * (C) Copyright 2009
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <env.h>
-#include <init.h>
-#include <net.h>
 #include <asm/mach-types.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/soc.h>
@@ -100,9 +98,9 @@ int misc_init_r(void)
 void reset_phy(void)
 {
 #if defined(CONFIG_NETSPACE_LITE_V2) || defined(CONFIG_NETSPACE_MINI_V2)
-	mv_phy_88e1318_init("ethernet-controller@72000", 0);
+	mv_phy_88e1318_init("egiga0", 0);
 #else
-	mv_phy_88e1116_init("ethernet-controller@72000", 8);
+	mv_phy_88e1116_init("egiga0", 8);
 #endif
 }
 #endif
@@ -110,7 +108,7 @@ void reset_phy(void)
 #if defined(CONFIG_KIRKWOOD_GPIO)
 /* Return GPIO button status */
 static int
-do_read_button(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+do_read_button(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	return kw_gpio_get_value(NETSPACE_V2_GPIO_BUTTON);
 }

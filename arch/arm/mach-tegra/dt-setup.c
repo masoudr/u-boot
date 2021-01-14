@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2010-2016, NVIDIA CORPORATION.
+ *
+ * SPDX-License-Identifier: GPL-2.0+
  */
 
 #include <common.h>
@@ -10,7 +11,7 @@
  * This function is called right before the kernel is booted. "blob" is the
  * device tree that will be passed to the kernel.
  */
-int ft_system_setup(void *blob, struct bd_info *bd)
+int ft_system_setup(void *blob, bd_t *bd)
 {
 	const char *gpu_compats[] = {
 #if defined(CONFIG_TEGRA124)

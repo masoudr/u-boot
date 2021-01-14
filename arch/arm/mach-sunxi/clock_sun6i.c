@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * sun6i specific clock code
  *
@@ -7,6 +6,8 @@
  * Tom Cubie <tangliang@allwinnertech.com>
  *
  * (C) Copyright 2013 Luke Kenneth Casson Leighton <lkcl@lkcl.net>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -14,8 +15,6 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/prcm.h>
 #include <asm/arch/sys_proto.h>
-#include <linux/bitops.h>
-#include <linux/delay.h>
 
 #ifdef CONFIG_SPL_BUILD
 void clock_init_safe(void)
@@ -23,7 +22,8 @@ void clock_init_safe(void)
 	struct sunxi_ccm_reg * const ccm =
 		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
 
-#if !defined(CONFIG_MACH_SUNXI_H3_H5) && !defined(CONFIG_MACH_SUN50I)
+#if !defined(CONFIG_MACH_SUNXI_H3_H5) && !defined(CONFIG_MACH_SUN50I) && \
+	!defined(CONFIG_MACH_SUNIV)
 	struct sunxi_prcm_reg * const prcm =
 		(struct sunxi_prcm_reg *)SUNXI_PRCM_BASE;
 
@@ -49,9 +49,11 @@ void clock_init_safe(void)
 
 	writel(AHB1_ABP1_DIV_DEFAULT, &ccm->ahb1_apb1_div);
 
+#ifndef CONFIG_MACH_SUNIV
 	writel(MBUS_CLK_DEFAULT, &ccm->mbus0_clk_cfg);
 	if (IS_ENABLED(CONFIG_MACH_SUN6I))
 		writel(MBUS_CLK_DEFAULT, &ccm->mbus1_clk_cfg);
+#endif
 
 #if defined(CONFIG_MACH_SUN8I_R40) && defined(CONFIG_SUNXI_AHCI)
 	setbits_le32(&ccm->sata_pll_cfg, CCM_SATA_PLL_DEFAULT);
@@ -87,6 +89,7 @@ void clock_init_uart(void)
 	struct sunxi_ccm_reg *const ccm =
 		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
 
+#ifndef CONFIG_MACH_SUNIV
 	/* uart clock source is apb2 */
 	writel(APB2_CLK_SRC_OSC24M|
 	       APB2_CLK_RATE_N_1|
@@ -102,6 +105,24 @@ void clock_init_uart(void)
 	setbits_le32(&ccm->apb2_reset_cfg,
 		     1 << (APB2_RESET_UART_SHIFT +
 			   CONFIG_CONS_INDEX - 1));
+#else
+	/* suniv doesn't have apb2, so uart clock source is apb1 */
+	writel(PLL6_CFG_DEFAULT, &ccm->pll6_cfg);
+	while (!(readl(&ccm->pll6_cfg) & CCM_PLL6_CTRL_LOCK))
+		;
+
+	writel(AHB1_ABP1_DIV_DEFAULT, &ccm->ahb1_apb1_div);
+
+	/* open the clock for uart */
+	setbits_le32(&ccm->apb1_gate,
+		     CLK_GATE_OPEN << (APB1_GATE_UART_SHIFT +
+				       CONFIG_CONS_INDEX - 1));
+
+	/* deassert uart reset */
+	setbits_le32(&ccm->apb1_reset_cfg,
+		     1 << (APB1_RESET_UART_SHIFT +
+			   CONFIG_CONS_INDEX - 1));
+#endif
 #else
 	/* enable R_PIO and R_UART clocks, and de-assert resets */
 	prcm_apb0_enable(PRCM_APB0_GATE_PIO | PRCM_APB0_GATE_UART);
@@ -120,15 +141,20 @@ void clock_set_pll1(unsigned int clk)
 	if (clk > 1152000000) {
 		k = 2;
 	} else if (clk > 768000000) {
-		k = 4;
+		k = 3;
 		m = 2;
 	}
 
 	/* Switch to 24MHz clock while changing PLL1 */
+#ifndef CONFIG_MACH_SUNIV
 	writel(AXI_DIV_3 << AXI_DIV_SHIFT |
 	       ATB_DIV_2 << ATB_DIV_SHIFT |
 	       CPU_CLK_SRC_OSC24M << CPU_CLK_SRC_SHIFT,
 	       &ccm->cpu_axi_cfg);
+#else
+	writel(CPU_CLK_SRC_OSC24M << CPU_CLK_SRC_SHIFT,
+	       &ccm->cpu_axi_cfg);
+#endif
 
 	/*
 	 * sun6i: PLL1 rate = ((24000000 * n * k) >> 0) / m   (p is ignored)
@@ -137,13 +163,27 @@ void clock_set_pll1(unsigned int clk)
 	writel(CCM_PLL1_CTRL_EN | CCM_PLL1_CTRL_P(p) |
 	       CCM_PLL1_CTRL_N(clk / (24000000 * k / m)) |
 	       CCM_PLL1_CTRL_K(k) | CCM_PLL1_CTRL_M(m), &ccm->pll1_cfg);
+#ifndef CONFIG_MACH_SUNIV
 	sdelay(200);
+#else
+	do {
+		/* ARM926EJ-S code do not have sdelay */
+		volatile int i = 200;
+
+		while (i > 0) i--;
+	} while(0);
+#endif
 
 	/* Switch CPU to PLL1 */
+#ifndef CONFIG_MACH_SUNIV
 	writel(AXI_DIV_3 << AXI_DIV_SHIFT |
 	       ATB_DIV_2 << ATB_DIV_SHIFT |
 	       CPU_CLK_SRC_PLL1 << CPU_CLK_SRC_SHIFT,
 	       &ccm->cpu_axi_cfg);
+#else
+	writel(CPU_CLK_SRC_PLL1 << CPU_CLK_SRC_SHIFT,
+	       &ccm->cpu_axi_cfg);
+#endif
 }
 #endif
 
@@ -151,11 +191,7 @@ void clock_set_pll3(unsigned int clk)
 {
 	struct sunxi_ccm_reg * const ccm =
 		(struct sunxi_ccm_reg *)SUNXI_CCM_BASE;
-#ifdef CONFIG_SUNXI_DE2
-	const int m = 4; /* 6 MHz steps to allow higher frequency for DE2 */
-#else
 	const int m = 8; /* 3 MHz steps just like sun4i, sun5i and sun7i */
-#endif
 
 	if (clk == 0) {
 		clrbits_le32(&ccm->pll3_cfg, CCM_PLL3_CTRL_EN);
@@ -317,7 +353,11 @@ unsigned int clock_get_pll6(void)
 	uint32_t rval = readl(&ccm->pll6_cfg);
 	int n = ((rval & CCM_PLL6_CTRL_N_MASK) >> CCM_PLL6_CTRL_N_SHIFT) + 1;
 	int k = ((rval & CCM_PLL6_CTRL_K_MASK) >> CCM_PLL6_CTRL_K_SHIFT) + 1;
+#ifndef CONFIG_MACH_SUNIV
 	return 24000000 * n * k / 2;
+#else
+	return 24000000 * n * k;
+#endif
 }
 
 unsigned int clock_get_mipi_pll(void)

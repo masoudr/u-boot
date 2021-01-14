@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Andes Technology Corporation
  * Shawn Lin, Andes Technology Corporation <nobuhiro@andestech.com>
  * Macpaul Lin, Andes Technology Corporation <macpaul@andestech.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <flash.h>
-#include <init.h>
-#include <net.h>
 #if defined(CONFIG_FTMAC100) && !defined(CONFIG_DM_ETH)
 #include <netdev.h>
 #endif
@@ -16,6 +14,7 @@
 #include <asm/io.h>
 #include <asm/mach-types.h>
 
+#include <faraday/ftsdc010.h>
 #include <faraday/ftsmc020.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -66,7 +65,7 @@ int dram_init_banksize(void)
 }
 
 #if defined(CONFIG_FTMAC100) && !defined(CONFIG_DM_ETH)
-int board_eth_init(struct bd_info *bd)
+int board_eth_init(bd_t *bd)
 {
 	return ftmac100_initialize(bd);
 }
@@ -82,4 +81,14 @@ ulong board_flash_get_legacy(ulong base, int banknum, flash_info_t *info)
 	} else {
 		return 0;
 	}
+}
+
+int board_mmc_init(bd_t *bis)
+{
+#ifndef CONFIG_DM_MMC
+#ifdef CONFIG_FTSDC010
+	ftsdc010_mmc_init(0);
+#endif
+#endif
+	return 0;
 }

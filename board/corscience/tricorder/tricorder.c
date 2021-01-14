@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2012
  * Corscience GmbH & Co. KG, <www.corscience.de>
@@ -8,12 +7,11 @@
  *
  * Derived from Devkit8000 code by
  * Frederik Kriewitz <frederik@kriewitz.eu>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
-#include <init.h>
-#include <malloc.h>
 #include <twl4030.h>
-#include <status_led.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
 #include <asm/arch/mmc_host_def.h>
@@ -143,7 +141,7 @@ void set_muxconf_regs(void)
 }
 
 #if defined(CONFIG_MMC)
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	return omap_mmc_init(0, 0, 0, -1, -1);
 }

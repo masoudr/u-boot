@@ -1,9 +1,12 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2017 Rockchip Electronics Co., Ltd
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 #ifndef _ASM_ARCH_GRF_RK3128_H
 #define _ASM_ARCH_GRF_RK3128_H
+
+#include <common.h>
 
 struct rk3128_grf {
 	unsigned int reserved[0x2a];

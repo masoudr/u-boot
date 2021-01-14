@@ -1,14 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2011,2012 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <env.h>
-#include <fdt_support.h>
-#include <image.h>
-#include <init.h>
 #include <netdev.h>
 #include <linux/compiler.h>
 #include <asm/mmu.h>
@@ -20,7 +17,7 @@
 #include <asm/fsl_liodn.h>
 #include <fm_eth.h>
 
-extern void pci_of_setup(void *blob, struct bd_info *bd);
+extern void pci_of_setup(void *blob, bd_t *bd);
 
 #include "cpld.h"
 
@@ -215,7 +212,7 @@ int misc_init_r(void)
 	return 0;
 }
 
-int ft_board_setup(void *blob, struct bd_info *bd)
+int ft_board_setup(void *blob, bd_t *bd)
 {
 	phys_addr_t base;
 	phys_size_t size;
@@ -237,9 +234,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 
 	fdt_fixup_liodn(blob);
 #ifdef CONFIG_SYS_DPAA_FMAN
-#ifndef CONFIG_DM_ETH
 	fdt_fixup_fman_ethernet(blob);
-#endif
 #endif
 
 	return 0;

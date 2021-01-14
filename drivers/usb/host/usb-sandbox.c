@@ -1,14 +1,16 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
-#include <log.h>
 #include <usb.h>
 #include <dm/root.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 struct sandbox_usb_ctrl {
 	int rootdev;
@@ -23,7 +25,7 @@ static void usbmon_trace(struct udevice *bus, ulong pipe,
 	type = (pipe & USB_PIPE_TYPE_MASK) >> USB_PIPE_TYPE_SHIFT;
 	debug("0 0 S %c%c:%d:%03ld:%ld", types[type],
 	      pipe & USB_DIR_IN ? 'i' : 'o',
-	      dev_seq(bus),
+	      bus->seq,
 	      (pipe & USB_PIPE_DEV_MASK) >> USB_PIPE_DEV_SHIFT,
 	      (pipe & USB_PIPE_EP_MASK) >> USB_PIPE_EP_SHIFT);
 	if (setup) {
@@ -100,7 +102,7 @@ static int sandbox_submit_bulk(struct udevice *bus, struct usb_device *udev,
 
 static int sandbox_submit_int(struct udevice *bus, struct usb_device *udev,
 			      unsigned long pipe, void *buffer, int length,
-			      int interval, bool nonblock)
+			      int interval)
 {
 	struct udevice *emul;
 	int ret;
@@ -111,8 +113,7 @@ static int sandbox_submit_int(struct udevice *bus, struct usb_device *udev,
 	usbmon_trace(bus, pipe, NULL, emul);
 	if (ret)
 		return ret;
-	ret = usb_emul_int(emul, udev, pipe, buffer, length, interval,
-			   nonblock);
+	ret = usb_emul_int(emul, udev, pipe, buffer, length, interval);
 
 	return ret;
 }
@@ -155,5 +156,5 @@ U_BOOT_DRIVER(usb_sandbox) = {
 	.of_match = sandbox_usb_ids,
 	.probe = sandbox_usb_probe,
 	.ops	= &sandbox_usb_ops,
-	.priv_auto	= sizeof(struct sandbox_usb_ctrl),
+	.priv_auto_alloc_size = sizeof(struct sandbox_usb_ctrl),
 };

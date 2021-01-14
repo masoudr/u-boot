@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011
  * eInfochips Ltd. <www.einfochips.com>
@@ -9,11 +8,11 @@
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
  * Contributor: Mahavir Jain <mjain@marvell.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <log.h>
 #include <mvmfp.h>
 #include <asm/arch/cpu.h>
 #include <asm/arch/mfp.h>
@@ -21,7 +20,6 @@
 #include <asm/gpio.h>
 #include <miiphy.h>
 #include <asm/mach-types.h>
-#include <linux/delay.h>
 
 #ifdef CONFIG_ARMADA100_FEC
 #include <net.h>
@@ -94,7 +92,7 @@ int board_init(void)
 }
 
 #ifdef CONFIG_ARMADA100_FEC
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	struct armd1apmu_registers *apmu_regs =
 		(struct armd1apmu_registers *)ARMD1_APMU_BASE;

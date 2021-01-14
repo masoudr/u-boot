@@ -1,13 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2016 NXP Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
-#include <log.h>
 #include <malloc.h>
 #include <config.h>
 #include <errno.h>
-#include <asm/cache.h>
 #include <asm/system.h>
 #include <asm/types.h>
 #include <asm/arch/soc.h>
@@ -16,7 +15,7 @@
 #elif defined(CONFIG_FSL_LSCH2)
 #include <asm/arch/immap_lsch2.h>
 #endif
-#if CONFIG_IS_ENABLED(ARMV8_SEC_FIRMWARE_SUPPORT)
+#ifdef CONFIG_ARMV8_SEC_FIRMWARE_SUPPORT
 #include <asm/armv8/sec_firmware.h>
 #endif
 #ifdef CONFIG_CHAIN_OF_TRUST
@@ -101,7 +100,7 @@ int ppa_init(void)
 	cnt = DIV_ROUND_UP(fdt_header_len, 512);
 	debug("%s: MMC read PPA FIT header: dev # %u, block # %u, count %u\n",
 	      __func__, dev, blk, cnt);
-	ret = blk_dread(mmc_get_blk_desc(mmc), blk, cnt, fitp);
+	ret = mmc->block_dev.block_read(&mmc->block_dev, blk, cnt, fitp);
 	if (ret != cnt) {
 		free(fitp);
 		printf("MMC/SD read of PPA FIT header at offset 0x%x failed\n",
@@ -125,7 +124,7 @@ int ppa_init(void)
 
 	blk = CONFIG_SYS_LS_PPA_ESBC_ADDR >> 9;
 	cnt = DIV_ROUND_UP(CONFIG_LS_PPA_ESBC_HDR_SIZE, 512);
-	ret = blk_dread(mmc_get_blk_desc(mmc), blk, cnt, ppa_hdr_ddr);
+	ret = mmc->block_dev.block_read(&mmc->block_dev, blk, cnt, ppa_hdr_ddr);
 	if (ret != cnt) {
 		free(ppa_hdr_ddr);
 		printf("MMC/SD read of PPA header failed\n");
@@ -151,7 +150,8 @@ int ppa_init(void)
 	cnt = DIV_ROUND_UP(fw_length, 512);
 	debug("%s: MMC read PPA FIT image: dev # %u, block # %u, count %u\n",
 	      __func__, dev, blk, cnt);
-	ret = blk_dread(mmc_get_blk_desc(mmc), blk, cnt, ppa_fit_addr);
+	ret = mmc->block_dev.block_read(&mmc->block_dev,
+					blk, cnt, ppa_fit_addr);
 	if (ret != cnt) {
 		free(ppa_fit_addr);
 		printf("MMC/SD read of PPA FIT header at offset 0x%x failed\n",

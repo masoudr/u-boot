@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2003
  * Josef Baumgartner <josef.baumgartner@telex.de>
@@ -11,24 +10,22 @@
  * Copyright (C) 2008 Arthur Shipkowski (art@videon-central.com)
  *
  * Copyright (C) 2012 Freescale Semiconductor, Inc. All Rights Reserved.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <net.h>
-#include <vsprintf.h>
 #include <watchdog.h>
 #include <command.h>
 #include <asm/immap.h>
 #include <asm/io.h>
 #include <netdev.h>
-#include <linux/delay.h>
 #include "cpu.h"
 
 DECLARE_GLOBAL_DATA_PTR;
 
 #ifdef	CONFIG_M5208
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	rcm_t *rcm = (rcm_t *)(MMAP_RCM);
 
@@ -40,8 +37,7 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 	return 0;
 };
 
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	char buf1[32], buf2[32];
 
@@ -51,7 +47,6 @@ int print_cpuinfo(void)
 	       strmhz(buf2, gd->bus_clk));
 	return 0;
 };
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
 #if defined(CONFIG_WATCHDOG)
 /* Called by macro WATCHDOG_RESET */
@@ -99,13 +94,12 @@ int watchdog_init(void)
 #endif				/* #ifdef CONFIG_M5208 */
 
 #ifdef  CONFIG_M5271
-#if defined(CONFIG_DISPLAY_CPUINFO)
 /*
  * Both MCF5270 and MCF5271 are members of the MPC5271 family. Try to
  * determine which one we are running on, based on the Chip Identification
  * Register (CIR).
  */
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	char buf[32];
 	unsigned short cir;	/* Chip Identification Register */
@@ -139,9 +133,8 @@ int print_cpuinfo(void)
 
 	return 0;
 }
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	/* Call the board specific reset actions first. */
 	if(board_reset) {
@@ -176,7 +169,7 @@ int watchdog_init(void)
 #endif
 
 #ifdef	CONFIG_M5272
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	wdog_t *wdp = (wdog_t *) (MMAP_WDOG);
 
@@ -191,8 +184,7 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 	return 0;
 };
 
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	sysctrl_t *sysctrl = (sysctrl_t *) (MMAP_CFG);
 	uchar msk;
@@ -217,7 +209,6 @@ int print_cpuinfo(void)
 		printf("Freescale MCF5272 %s\n", suf);
 	return 0;
 };
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
 #if defined(CONFIG_WATCHDOG)
 /* Called by macro WATCHDOG_RESET */
@@ -265,7 +256,7 @@ int watchdog_init(void)
 #endif				/* #ifdef CONFIG_M5272 */
 
 #ifdef	CONFIG_M5275
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	rcm_t *rcm = (rcm_t *)(MMAP_RCM);
 
@@ -277,8 +268,7 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 	return 0;
 };
 
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	char buf[32];
 
@@ -286,7 +276,7 @@ int print_cpuinfo(void)
 			strmhz(buf, CONFIG_SYS_CLK));
 	return 0;
 };
-#endif /* CONFIG_DISPLAY_CPUINFO */
+
 
 #if defined(CONFIG_WATCHDOG)
 /* Called by macro WATCHDOG_RESET */
@@ -336,8 +326,7 @@ int watchdog_init(void)
 #endif				/* #ifdef CONFIG_M5275 */
 
 #ifdef	CONFIG_M5282
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	unsigned char resetsource = MCFRESET_RSR;
 
@@ -353,9 +342,8 @@ int print_cpuinfo(void)
 	       (resetsource & MCFRESET_RSR_LVD) ? " Low Voltage" : "");
 	return 0;
 }
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	MCFRESET_RCR = MCFRESET_RCR_SOFTRST;
 	return 0;
@@ -363,8 +351,7 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 #endif
 
 #ifdef CONFIG_M5249
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	char buf[32];
 
@@ -372,9 +359,8 @@ int print_cpuinfo(void)
 	       strmhz(buf, CONFIG_SYS_CLK));
 	return 0;
 }
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	/* enable watchdog, set timeout to 0 and wait */
 	mbar_writeByte(MCFSIM_SYPCR, 0xc0);
@@ -386,8 +372,7 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 #endif
 
 #ifdef CONFIG_M5253
-#if defined(CONFIG_DISPLAY_CPUINFO)
-int print_cpuinfo(void)
+int checkcpu(void)
 {
 	char buf[32];
 
@@ -404,9 +389,8 @@ int print_cpuinfo(void)
 	}
 	return 0;
 }
-#endif /* CONFIG_DISPLAY_CPUINFO */
 
-int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_reset(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	/* enable watchdog, set timeout to 0 and wait */
 	mbar_writeByte(SIM_SYPCR, 0xc0);
@@ -420,10 +404,10 @@ int do_reset(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
 #if defined(CONFIG_MCFFEC)
 /* Default initializations for MCFFEC controllers.  To override,
  * create a board-specific function called:
- * 	int board_eth_init(struct bd_info *bis)
+ * 	int board_eth_init(bd_t *bis)
  */
 
-int cpu_eth_init(struct bd_info *bis)
+int cpu_eth_init(bd_t *bis)
 {
 	return mcffec_initialize(bis);
 }

@@ -1,14 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2015-2016
  * Texas Instruments Incorporated - http://www.ti.com/
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #define pr_fmt(fmt) "%s: " fmt, __func__
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <fdtdec.h>
-#include <log.h>
 #include <remoteproc.h>
 #include <mach/psc_defs.h>
 
@@ -71,7 +70,7 @@ static int ti_powerproc_probe(struct udevice *dev)
 	struct ti_powerproc_privdata *priv;
 	int ret;
 
-	uc_pdata = dev_get_uclass_plat(dev);
+	uc_pdata = dev_get_uclass_platdata(dev);
 	priv = dev_get_priv(dev);
 
 	ret = ti_of_to_priv(dev, priv);
@@ -96,7 +95,7 @@ static int ti_powerproc_load(struct udevice *dev, ulong addr, ulong size)
 	struct ti_powerproc_privdata *priv;
 	int ret;
 
-	uc_pdata = dev_get_uclass_plat(dev);
+	uc_pdata = dev_get_uclass_platdata(dev);
 	if (!uc_pdata) {
 		debug("%s: no uc pdata!\n", dev->name);
 		return -EINVAL;
@@ -131,7 +130,7 @@ static int ti_powerproc_start(struct udevice *dev)
 	struct ti_powerproc_privdata *priv;
 	int ret;
 
-	uc_pdata = dev_get_uclass_plat(dev);
+	uc_pdata = dev_get_uclass_platdata(dev);
 	if (!uc_pdata) {
 		debug("%s: no uc pdata!\n", dev->name);
 		return -EINVAL;
@@ -177,5 +176,5 @@ U_BOOT_DRIVER(ti_powerproc) = {
 	.id = UCLASS_REMOTEPROC,
 	.ops = &ti_powerproc_ops,
 	.probe = ti_powerproc_probe,
-	.priv_auto	= sizeof(struct ti_powerproc_privdata),
+	.priv_auto_alloc_size = sizeof(struct ti_powerproc_privdata),
 };

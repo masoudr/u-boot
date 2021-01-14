@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2017 Álvaro Fernández Rojas <noltari@gmail.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <configs/bmips_common.h>
@@ -8,8 +9,8 @@
 
 #define CONFIG_REMAKE_ELF
 
-#ifdef CONFIG_MTD_RAW_NAND
-#define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_SYS_NAND_SELF_INIT
-#define CONFIG_SYS_NAND_ONFI_DETECTION
-#endif /* CONFIG_MTD_RAW_NAND */
+#define CONFIG_ENV_SIZE			(8 * 1024)
+
+#define CONFIG_AUTO_COMPLETE
+#define CONFIG_CMDLINE_EDITING
+#define CONFIG_SYS_LONGHELP

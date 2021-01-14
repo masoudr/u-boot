@@ -1,16 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2008, Guennadi Liakhovetski <lg@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
-#include <log.h>
 #include <malloc.h>
 #include <spi.h>
-#include <dm/device_compat.h>
-#include <linux/bitops.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
@@ -42,8 +39,6 @@ __weak int board_spi_cs_gpio(unsigned bus, unsigned cs)
 #define CONFIG_SYS_SPI_MXC_WAIT		(CONFIG_SYS_HZ/100)	/* 10 ms */
 #endif
 
-#define MAX_CS_COUNT	4
-
 struct mxc_spi_slave {
 	struct spi_slave slave;
 	unsigned long	base;
@@ -56,8 +51,6 @@ struct mxc_spi_slave {
 	unsigned int	max_hz;
 	unsigned int	mode;
 	struct gpio_desc ss;
-	struct gpio_desc cs_gpios[MAX_CS_COUNT];
-	struct udevice *dev;
 };
 
 static inline struct mxc_spi_slave *to_mxc_spi_slave(struct spi_slave *slave)
@@ -67,38 +60,22 @@ static inline struct mxc_spi_slave *to_mxc_spi_slave(struct spi_slave *slave)
 
 static void mxc_spi_cs_activate(struct mxc_spi_slave *mxcs)
 {
-#if CONFIG_IS_ENABLED(DM_SPI)
-	struct udevice *dev = mxcs->dev;
-	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
-
-	u32 cs = slave_plat->cs;
-
-	if (!dm_gpio_is_valid(&mxcs->cs_gpios[cs]))
-		return;
-
-	dm_gpio_set_value(&mxcs->cs_gpios[cs], 1);
-#else
-	if (mxcs->gpio > 0)
-		gpio_set_value(mxcs->gpio, mxcs->ss_pol);
-#endif
+	if (CONFIG_IS_ENABLED(DM_SPI)) {
+		dm_gpio_set_value(&mxcs->ss, mxcs->ss_pol);
+	} else {
+		if (mxcs->gpio > 0)
+			gpio_set_value(mxcs->gpio, mxcs->ss_pol);
+	}
 }
 
 static void mxc_spi_cs_deactivate(struct mxc_spi_slave *mxcs)
 {
-#if CONFIG_IS_ENABLED(DM_SPI)
-	struct udevice *dev = mxcs->dev;
-	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
-
-	u32 cs = slave_plat->cs;
-
-	if (!dm_gpio_is_valid(&mxcs->cs_gpios[cs]))
-		return;
-
-	dm_gpio_set_value(&mxcs->cs_gpios[cs], 0);
-#else
-	if (mxcs->gpio > 0)
-		gpio_set_value(mxcs->gpio, !(mxcs->ss_pol));
-#endif
+	if (CONFIG_IS_ENABLED(DM_SPI)) {
+		dm_gpio_set_value(&mxcs->ss, !(mxcs->ss_pol));
+	} else {
+		if (mxcs->gpio > 0)
+			gpio_set_value(mxcs->gpio, !(mxcs->ss_pol));
+	}
 }
 
 u32 get_cspi_div(u32 div)
@@ -248,8 +225,8 @@ int spi_xchg_single(struct mxc_spi_slave *mxcs, unsigned int bitlen,
 	u32 ts;
 	int status;
 
-	debug("%s: bitlen %d dout 0x%lx din 0x%lx\n",
-		__func__, bitlen, (ulong)dout, (ulong)din);
+	debug("%s: bitlen %d dout 0x%x din 0x%x\n",
+		__func__, bitlen, (u32)dout, (u32)din);
 
 	mxcs->ctrl_reg = (mxcs->ctrl_reg &
 		~MXC_CSPICTRL_BITCOUNT(MXC_CSPICTRL_MAXBITS)) |
@@ -415,13 +392,17 @@ static int mxc_spi_claim_bus_internal(struct mxc_spi_slave *mxcs, int cs)
 	return 0;
 }
 
-#if !CONFIG_IS_ENABLED(DM_SPI)
+#ifndef CONFIG_DM_SPI
 int spi_xfer(struct spi_slave *slave, unsigned int bitlen, const void *dout,
 		void *din, unsigned long flags)
 {
 	struct mxc_spi_slave *mxcs = to_mxc_spi_slave(slave);
 
 	return mxc_spi_xfer_internal(mxcs, bitlen, dout, din, flags);
+}
+
+void spi_init(void)
+{
 }
 
 /*
@@ -512,34 +493,27 @@ void spi_release_bus(struct spi_slave *slave)
 
 static int mxc_spi_probe(struct udevice *bus)
 {
-	struct mxc_spi_slave *mxcs = dev_get_plat(bus);
+	struct mxc_spi_slave *plat = bus->platdata;
+	struct mxc_spi_slave *mxcs = dev_get_platdata(bus);
 	int node = dev_of_offset(bus);
 	const void *blob = gd->fdt_blob;
 	int ret;
-	int i;
 
-	ret = gpio_request_list_by_name(bus, "cs-gpios", mxcs->cs_gpios,
-					ARRAY_SIZE(mxcs->cs_gpios), 0);
-	if (ret < 0) {
-		pr_err("Can't get %s gpios! Error: %d", bus->name, ret);
+	if (gpio_request_by_name(bus, "cs-gpios", 0, &plat->ss,
+				 GPIOD_IS_OUT)) {
+		dev_err(bus, "No cs-gpios property\n");
+		return -EINVAL;
+	}
+
+	plat->base = dev_get_addr(bus);
+	if (plat->base == FDT_ADDR_T_NONE)
+		return -ENODEV;
+
+	ret = dm_gpio_set_value(&plat->ss, !(mxcs->ss_pol));
+	if (ret) {
+		dev_err(bus, "Setting cs error\n");
 		return ret;
 	}
-
-	for (i = 0; i < ARRAY_SIZE(mxcs->cs_gpios); i++) {
-		if (!dm_gpio_is_valid(&mxcs->cs_gpios[i]))
-			continue;
-
-		ret = dm_gpio_set_dir_flags(&mxcs->cs_gpios[i],
-					    GPIOD_IS_OUT | GPIOD_ACTIVE_LOW);
-		if (ret) {
-			dev_err(bus, "Setting cs %d error\n", i);
-			return ret;
-		}
-	}
-
-	mxcs->base = dev_read_addr(bus);
-	if (mxcs->base == FDT_ADDR_T_NONE)
-		return -ENODEV;
 
 	mxcs->max_hz = fdtdec_get_int(blob, node, "spi-max-frequency",
 				      20000000);
@@ -550,7 +524,7 @@ static int mxc_spi_probe(struct udevice *bus)
 static int mxc_spi_xfer(struct udevice *dev, unsigned int bitlen,
 		const void *dout, void *din, unsigned long flags)
 {
-	struct mxc_spi_slave *mxcs = dev_get_plat(dev->parent);
+	struct mxc_spi_slave *mxcs = dev_get_platdata(dev->parent);
 
 
 	return mxc_spi_xfer_internal(mxcs, bitlen, dout, din, flags);
@@ -558,10 +532,8 @@ static int mxc_spi_xfer(struct udevice *dev, unsigned int bitlen,
 
 static int mxc_spi_claim_bus(struct udevice *dev)
 {
-	struct mxc_spi_slave *mxcs = dev_get_plat(dev->parent);
-	struct dm_spi_slave_plat *slave_plat = dev_get_parent_plat(dev);
-
-	mxcs->dev = dev;
+	struct mxc_spi_slave *mxcs = dev_get_platdata(dev->parent);
+	struct dm_spi_slave_platdata *slave_plat = dev_get_parent_platdata(dev);
 
 	return mxc_spi_claim_bus_internal(mxcs, slave_plat->cs);
 }
@@ -579,7 +551,7 @@ static int mxc_spi_set_speed(struct udevice *bus, uint speed)
 
 static int mxc_spi_set_mode(struct udevice *bus, uint mode)
 {
-	struct mxc_spi_slave *mxcs = dev_get_plat(bus);
+	struct mxc_spi_slave *mxcs = dev_get_platdata(bus);
 
 	mxcs->mode = mode;
 	mxcs->ss_pol = (mode & SPI_CS_HIGH) ? 1 : 0;
@@ -605,7 +577,7 @@ U_BOOT_DRIVER(mxc_spi) = {
 	.id	= UCLASS_SPI,
 	.of_match = mxc_spi_ids,
 	.ops	= &mxc_spi_ops,
-	.plat_auto	= sizeof(struct mxc_spi_slave),
+	.platdata_auto_alloc_size = sizeof(struct mxc_spi_slave),
 	.probe	= mxc_spi_probe,
 };
 #endif

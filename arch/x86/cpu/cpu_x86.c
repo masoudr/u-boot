@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015, Bin Meng <bmeng.cn@gmail.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -13,7 +14,7 @@ DECLARE_GLOBAL_DATA_PTR;
 
 int cpu_x86_bind(struct udevice *dev)
 {
-	struct cpu_plat *plat = dev_get_parent_plat(dev);
+	struct cpu_platdata *plat = dev_get_parent_platdata(dev);
 	struct cpuid_result res;
 
 	plat->cpu_id = fdtdec_get_int(gd->fdt_blob, dev_of_offset(dev),
@@ -26,7 +27,7 @@ int cpu_x86_bind(struct udevice *dev)
 	return 0;
 }
 
-int cpu_x86_get_vendor(const struct udevice *dev, char *buf, int size)
+int cpu_x86_get_vendor(struct udevice *dev, char *buf, int size)
 {
 	const char *vendor = cpu_vendor_name(gd->arch.x86_vendor);
 
@@ -38,7 +39,7 @@ int cpu_x86_get_vendor(const struct udevice *dev, char *buf, int size)
 	return 0;
 }
 
-int cpu_x86_get_desc(const struct udevice *dev, char *buf, int size)
+int cpu_x86_get_desc(struct udevice *dev, char *buf, int size)
 {
 	char *ptr;
 
@@ -52,7 +53,7 @@ int cpu_x86_get_desc(const struct udevice *dev, char *buf, int size)
 	return 0;
 }
 
-int cpu_x86_get_count(const struct udevice *dev)
+static int cpu_x86_get_count(struct udevice *dev)
 {
 	int node, cpu;
 	int num = 0;
@@ -94,5 +95,4 @@ U_BOOT_DRIVER(cpu_x86_drv) = {
 	.of_match	= cpu_x86_ids,
 	.bind		= cpu_x86_bind,
 	.ops		= &cpu_x86_ops,
-	.flags		= DM_FLAG_PRE_RELOC,
 };

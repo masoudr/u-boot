@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
 /**
  * Copyright 2011 Freescale Semiconductor
  * Author: Mingkai Hu <Mingkai.hu@freescale.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * This file provides support for the board-specific CPLD used on some Freescale
  * reference boards.
@@ -87,7 +88,7 @@ static void cpld_dump_regs(void)
 }
 #endif
 
-int cpld_cmd(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int cpld_cmd(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	int rc = 0;
 

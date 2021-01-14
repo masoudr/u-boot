@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Cirrus Logic EP93xx timer support.
  *
@@ -9,12 +8,11 @@
  *
  * Based on the original intr.c Cirrus Logic EP93xx Rev D. interrupt support,
  * author unknown.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <time.h>
-#include <linux/delay.h>
 #include <linux/types.h>
 #include <asm/arch/ep93xx.h>
 #include <asm/io.h>
@@ -69,9 +67,14 @@ unsigned long long get_ticks(void)
 	return sys_ticks;
 }
 
+unsigned long get_timer_masked(void)
+{
+	return get_ticks();
+}
+
 unsigned long get_timer(unsigned long base)
 {
-	return get_ticks() - base;
+	return get_timer_masked() - base;
 }
 
 void __udelay(unsigned long usec)

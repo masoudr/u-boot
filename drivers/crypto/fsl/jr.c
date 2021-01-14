@@ -1,26 +1,20 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2008-2014 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * Based on CAAM driver in drivers/crypto/caam in Linux
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <linux/kernel.h>
-#include <log.h>
 #include <malloc.h>
 #include "fsl_sec.h"
 #include "jr.h"
 #include "jobdesc.h"
 #include "desc_constr.h"
-#include <time.h>
-#include <asm/cache.h>
 #ifdef CONFIG_FSL_CORENET
-#include <asm/cache.h>
 #include <asm/fsl_pamu.h>
 #endif
-#include <dm/lists.h>
 
 #define CIRC_CNT(head, tail, size)	(((head) - (tail)) & (size - 1))
 #define CIRC_SPACE(head, tail, size)	CIRC_CNT((tail), (head) + 1, (size))
@@ -448,59 +442,17 @@ int sec_reset(void)
 	return sec_reset_idx(0);
 }
 #ifndef CONFIG_SPL_BUILD
-static int deinstantiate_rng(u8 sec_idx, int state_handle_mask)
+static int instantiate_rng(uint8_t sec_idx)
 {
-	u32 *desc;
-	int sh_idx, ret = 0;
-	int desc_size = ALIGN(sizeof(u32) * 2, ARCH_DMA_MINALIGN);
-
-	desc = memalign(ARCH_DMA_MINALIGN, desc_size);
-	if (!desc) {
-		debug("cannot allocate RNG init descriptor memory\n");
-		return -ENOMEM;
-	}
-
-	for (sh_idx = 0; sh_idx < RNG4_MAX_HANDLES; sh_idx++) {
-		/*
-		 * If the corresponding bit is set, then it means the state
-		 * handle was initialized by us, and thus it needs to be
-		 * deinitialized as well
-		 */
-
-		if (state_handle_mask & RDSTA_IF(sh_idx)) {
-			/*
-			 * Create the descriptor for deinstantating this state
-			 * handle.
-			 */
-			inline_cnstr_jobdesc_rng_deinstantiation(desc, sh_idx);
-			flush_dcache_range((unsigned long)desc,
-					   (unsigned long)desc + desc_size);
-
-			ret = run_descriptor_jr_idx(desc, sec_idx);
-			if (ret) {
-				printf("SEC%u:  RNG4 SH%d deinstantiation failed with error 0x%x\n",
-				       sec_idx, sh_idx, ret);
-				ret = -EIO;
-				break;
-			}
-
-			printf("SEC%u:  Deinstantiated RNG4 SH%d\n",
-			       sec_idx, sh_idx);
-		}
-	}
-
-	free(desc);
-	return ret;
-}
-
-static int instantiate_rng(u8 sec_idx, int gen_sk)
-{
+	struct result op;
 	u32 *desc;
 	u32 rdsta_val;
-	int ret = 0, sh_idx, size;
+	int ret = 0;
 	ccsr_sec_t __iomem *sec = (ccsr_sec_t __iomem *)SEC_ADDR(sec_idx);
 	struct rng4tst __iomem *rng =
 			(struct rng4tst __iomem *)&sec->rng;
+
+	memset(&op, 0, sizeof(struct result));
 
 	desc = memalign(ARCH_DMA_MINALIGN, sizeof(uint32_t) * 6);
 	if (!desc) {
@@ -508,45 +460,19 @@ static int instantiate_rng(u8 sec_idx, int gen_sk)
 		return -1;
 	}
 
-	for (sh_idx = 0; sh_idx < RNG4_MAX_HANDLES; sh_idx++) {
-		/*
-		 * If the corresponding bit is set, this state handle
-		 * was initialized by somebody else, so it's left alone.
-		 */
-		rdsta_val = sec_in32(&rng->rdsta);
-		if (rdsta_val & (RDSTA_IF(sh_idx))) {
-			if (rdsta_val & RDSTA_PR(sh_idx))
-				continue;
+	inline_cnstr_jobdesc_rng_instantiation(desc);
+	int size = roundup(sizeof(uint32_t) * 6, ARCH_DMA_MINALIGN);
+	flush_dcache_range((unsigned long)desc,
+			   (unsigned long)desc + size);
 
-			printf("SEC%u:  RNG4 SH%d was instantiated w/o prediction resistance. Tearing it down\n",
-			       sec_idx, sh_idx);
+	ret = run_descriptor_jr_idx(desc, sec_idx);
 
-			ret = deinstantiate_rng(sec_idx, RDSTA_IF(sh_idx));
-			if (ret)
-				break;
-		}
+	if (ret)
+		printf("RNG: Instantiation failed with error %x\n", ret);
 
-		inline_cnstr_jobdesc_rng_instantiation(desc, sh_idx, gen_sk);
-		size = roundup(sizeof(uint32_t) * 6, ARCH_DMA_MINALIGN);
-		flush_dcache_range((unsigned long)desc,
-				   (unsigned long)desc + size);
-
-		ret = run_descriptor_jr_idx(desc, sec_idx);
-
-		if (ret)
-			printf("SEC%u:  RNG4 SH%d instantiation failed with error 0x%x\n",
-			       sec_idx, sh_idx, ret);
-
-		rdsta_val = sec_in32(&rng->rdsta);
-		if (!(rdsta_val & RDSTA_IF(sh_idx))) {
-			free(desc);
-			return -1;
-		}
-
-		memset(desc, 0, sizeof(uint32_t) * 6);
-	}
-
-	free(desc);
+	rdsta_val = sec_in32(&rng->rdsta);
+	if (op.status || !(rdsta_val & RNG_STATE0_HANDLE_INSTANTIATED))
+		return -1;
 
 	return ret;
 }
@@ -554,17 +480,9 @@ static int instantiate_rng(u8 sec_idx, int gen_sk)
 static u8 get_rng_vid(uint8_t sec_idx)
 {
 	ccsr_sec_t *sec = (void *)SEC_ADDR(sec_idx);
-	u8 vid;
+	u32 cha_vid = sec_in32(&sec->chavid_ls);
 
-	if (caam_get_era() < 10) {
-		vid = (sec_in32(&sec->chavid_ls) & SEC_CHAVID_RNG_LS_MASK)
-		       >> SEC_CHAVID_LS_RNG_SHIFT;
-	} else {
-		vid = (sec_in32(&sec->vreg.rng) & CHA_VER_VID_MASK)
-		       >> CHA_VER_VID_SHIFT;
-	}
-
-	return vid;
+	return (cha_vid & SEC_CHAVID_RNG_LS_MASK) >> SEC_CHAVID_LS_RNG_SHIFT;
 }
 
 /*
@@ -602,16 +520,18 @@ static void kick_trng(int ent_delay, uint8_t sec_idx)
 
 static int rng_init(uint8_t sec_idx)
 {
-	int ret, gen_sk, ent_delay = RTSDCTL_ENT_DLY_MIN;
+	int ret, ent_delay = RTSDCTL_ENT_DLY_MIN;
 	ccsr_sec_t __iomem *sec = (ccsr_sec_t __iomem *)SEC_ADDR(sec_idx);
 	struct rng4tst __iomem *rng =
 			(struct rng4tst __iomem *)&sec->rng;
-	u32 inst_handles;
 
-	gen_sk = !(sec_in32(&rng->rdsta) & RDSTA_SKVN);
+	u32 rdsta = sec_in32(&rng->rdsta);
+
+	/* Check if RNG state 0 handler is already instantiated */
+	if (rdsta & RNG_STATE0_HANDLE_INSTANTIATED)
+		return 0;
+
 	do {
-		inst_handles = sec_in32(&rng->rdsta) & RDSTA_MASK;
-
 		/*
 		 * If either of the SH's were instantiated by somebody else
 		 * then it is assumed that the entropy
@@ -620,10 +540,8 @@ static int rng_init(uint8_t sec_idx)
 		 * Also, if a handle was instantiated, do not change
 		 * the TRNG parameters.
 		 */
-		if (!inst_handles) {
-			kick_trng(ent_delay, sec_idx);
-			ent_delay += 400;
-		}
+		kick_trng(ent_delay, sec_idx);
+		ent_delay += 400;
 		/*
 		 * if instantiate_rng(...) fails, the loop will rerun
 		 * and the kick_trng(...) function will modfiy the
@@ -631,10 +549,10 @@ static int rng_init(uint8_t sec_idx)
 		 * interval, leading to a sucessful initialization of
 		 * the RNG.
 		 */
-		ret = instantiate_rng(sec_idx, gen_sk);
+		ret = instantiate_rng(sec_idx);
 	} while ((ret == -1) && (ent_delay < RTSDCTL_ENT_DLY_MAX));
 	if (ret) {
-		printf("SEC%u:  Failed to instantiate RNG\n", sec_idx);
+		printf("RNG: Failed to instantiate RNG\n");
 		return ret;
 	}
 
@@ -657,7 +575,7 @@ int sec_init_idx(uint8_t sec_idx)
 #endif
 
 	if (!(sec_idx < CONFIG_SYS_FSL_MAX_NUM_OF_SEC)) {
-		printf("SEC%u:  initialization failed\n", sec_idx);
+		printf("SEC initialization failed\n");
 		return -1;
 	}
 
@@ -705,7 +623,7 @@ int sec_init_idx(uint8_t sec_idx)
 
 	ret = jr_init(sec_idx);
 	if (ret < 0) {
-		printf("SEC%u:  initialization failed\n", sec_idx);
+		printf("SEC initialization failed\n");
 		return -1;
 	}
 
@@ -719,18 +637,10 @@ int sec_init_idx(uint8_t sec_idx)
 #ifndef CONFIG_SPL_BUILD
 	if (get_rng_vid(sec_idx) >= 4) {
 		if (rng_init(sec_idx) < 0) {
-			printf("SEC%u:  RNG instantiation failed\n", sec_idx);
+			printf("SEC%u: RNG instantiation failed\n", sec_idx);
 			return -1;
 		}
-
-		if (IS_ENABLED(CONFIG_DM_RNG)) {
-			ret = device_bind_driver(NULL, "caam-rng", "caam-rng",
-						 NULL);
-			if (ret)
-				printf("Couldn't bind rng driver (%d)\n", ret);
-		}
-
-		printf("SEC%u:  RNG instantiated\n", sec_idx);
+		printf("SEC%u: RNG instantiated\n", sec_idx);
 	}
 #endif
 	return ret;

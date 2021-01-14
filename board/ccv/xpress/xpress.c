@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015-2016 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <init.h>
-#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
@@ -18,14 +17,12 @@
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/io.h>
 #include <common.h>
-#include <env.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <i2c.h>
 #include <miiphy.h>
 #include <mmc.h>
 #include <netdev.h>
 #include <usb.h>
-#include <linux/delay.h>
 #include <usb/ehci-ci.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -178,7 +175,7 @@ int board_mmc_getcd(struct mmc *mmc)
 	return 1;
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	imx_iomux_v3_setup_multiple_pads(usdhc2_pads, ARRAY_SIZE(usdhc2_pads));
 
@@ -249,7 +246,7 @@ static iomux_v3_cfg_t const fec1_pads[] = {
 
 #define ENET_PHY_RESET_GPIO IMX_GPIO_NR(4, 17)
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	int ret;
 

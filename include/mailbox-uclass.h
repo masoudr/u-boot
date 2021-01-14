@@ -1,6 +1,7 @@
-/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * Copyright (c) 2016, NVIDIA CORPORATION.
+ *
+ * SPDX-License-Identifier: GPL-2.0
  */
 
 #ifndef _MAILBOX_UCLASS_H
@@ -49,14 +50,14 @@ struct mbox_ops {
 	 */
 	int (*request)(struct mbox_chan *chan);
 	/**
-	 * rfree - Free a previously requested channel.
+	 * free - Free a previously requested channel.
 	 *
 	 * This is the implementation of the client mbox_free() API.
 	 *
 	 * @chan:	The channel to free.
 	 * @return 0 if OK, or a negative error code.
 	 */
-	int (*rfree)(struct mbox_chan *chan);
+	int (*free)(struct mbox_chan *chan);
 	/**
 	* send - Send a message over a mailbox channel
 	*

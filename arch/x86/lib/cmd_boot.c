@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2008-2011
  * Graeme Russ, <graeme.russ@gmail.com>
@@ -12,6 +11,8 @@
  * (C) Copyright 2002
  * Sysgo Real-Time Solutions, GmbH <www.elinos.com>
  * Marius Groeger <mgroeger@sysgo.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -22,7 +23,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 unsigned long do_go_exec(ulong (*entry)(int, char * const []),
-			 int argc, char *const argv[])
+			 int argc, char * const argv[])
 {
 	unsigned long ret = 0;
 	char **argv_tmp;

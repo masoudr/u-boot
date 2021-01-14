@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2013 Henrik Nordstrom <henrik@henriknordstrom.net>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -11,7 +12,6 @@
 #include <os.h>
 #include <malloc.h>
 #include <sandboxblockdev.h>
-#include <dm/device_compat.h>
 #include <linux/errno.h>
 #include <dm/device-internal.h>
 
@@ -34,8 +34,8 @@ static unsigned long host_block_read(struct udevice *dev,
 				     unsigned long start, lbaint_t blkcnt,
 				     void *buffer)
 {
-	struct host_block_dev *host_dev = dev_get_plat(dev);
-	struct blk_desc *block_dev = dev_get_uclass_plat(dev);
+	struct host_block_dev *host_dev = dev_get_priv(dev);
+	struct blk_desc *block_dev = dev_get_uclass_platdata(dev);
 
 #else
 static unsigned long host_block_read(struct blk_desc *block_dev,
@@ -65,8 +65,8 @@ static unsigned long host_block_write(struct udevice *dev,
 				      unsigned long start, lbaint_t blkcnt,
 				      const void *buffer)
 {
-	struct host_block_dev *host_dev = dev_get_plat(dev);
-	struct blk_desc *block_dev = dev_get_uclass_plat(dev);
+	struct host_block_dev *host_dev = dev_get_priv(dev);
+	struct blk_desc *block_dev = dev_get_uclass_platdata(dev);
 #else
 static unsigned long host_block_write(struct blk_desc *block_dev,
 				      unsigned long start, lbaint_t blkcnt,
@@ -132,18 +132,17 @@ int host_dev_bind(int devnum, char *filename)
 				os_lseek(fd, 0, OS_SEEK_END) / 512, &dev);
 	if (ret)
 		goto err_file;
-
-	host_dev = dev_get_plat(dev);
-	host_dev->fd = fd;
-	host_dev->filename = fname;
-
 	ret = device_probe(dev);
 	if (ret) {
 		device_unbind(dev);
 		goto err_file;
 	}
 
-	return 0;
+	host_dev = dev_get_priv(dev);
+	host_dev->fd = fd;
+	host_dev->filename = fname;
+
+	return blk_prepare_device(dev);
 err_file:
 	os_close(fd);
 err:
@@ -202,7 +201,7 @@ int host_get_dev_err(int devnum, struct blk_desc **blk_devp)
 	ret = blk_get_device(IF_TYPE_HOST, devnum, &dev);
 	if (ret)
 		return ret;
-	*blk_devp = dev_get_uclass_plat(dev);
+	*blk_devp = dev_get_uclass_platdata(dev);
 #else
 	struct host_block_dev *host_dev = find_host_device(devnum);
 
@@ -228,7 +227,7 @@ U_BOOT_DRIVER(sandbox_host_blk) = {
 	.name		= "sandbox_host_blk",
 	.id		= UCLASS_BLK,
 	.ops		= &sandbox_host_blk_ops,
-	.plat_auto	= sizeof(struct host_block_dev),
+	.priv_auto_alloc_size	= sizeof(struct host_block_dev),
 };
 #else
 U_BOOT_LEGACY_BLK(sandbox_host) = {

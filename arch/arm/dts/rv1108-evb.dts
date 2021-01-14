@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2016 Rockchip Electronics Co., Ltd
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 
 /dts-v1/;
@@ -45,7 +46,7 @@
 &sfc {
 	status = "okay";
 	flash@0 {
-		compatible = "gd25q256","jedec,spi-nor";
+		compatible = "gd25q256","spi-flash";
 		reg = <0>;
 		spi-tx-bus-width = <1>;
 		spi-rx-bus-width = <1>;

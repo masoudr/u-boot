@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
   dm9000.c: Version 1.2 12/15/2003
 
 	A Davicom DM9000 ISA NIC fast Ethernet driver for Linux.
 	Copyright (C) 1997  Sten Wang
+
+ * SPDX-License-Identifier:	GPL-2.0+
 
   (C)Copyright 1997-1998 DAVICOM Semiconductor,Inc. All Rights Reserved.
 
@@ -54,7 +55,6 @@ TODO: external MII is not functional, only internal at the moment.
 #include <net.h>
 #include <asm/io.h>
 #include <dm9000.h>
-#include <linux/delay.h>
 
 #include "dm9000x.h"
 
@@ -279,7 +279,7 @@ dm9000_reset(void)
 
 /* Initialize dm9000 board
 */
-static int dm9000_init(struct eth_device *dev, struct bd_info *bd)
+static int dm9000_init(struct eth_device *dev, bd_t *bd)
 {
 	int i, oft, lnk;
 	u8 io_mode;
@@ -619,7 +619,7 @@ dm9000_phy_write(int reg, u16 value)
 	DM9000_DBG("dm9000_phy_write(reg:0x%x, value:0x%x)\n", reg, value);
 }
 
-int dm9000_initialize(struct bd_info *bis)
+int dm9000_initialize(bd_t *bis)
 {
 	struct eth_device *dev = &(dm9000_info.netdev);
 

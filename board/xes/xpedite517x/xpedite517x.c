@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2009 Extreme Engineering Solutions, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
 #include <asm/processor.h>
 #include <fsl_ddr_sdram.h>
 #include <asm/mmu.h>
@@ -16,7 +16,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 #if defined(CONFIG_OF_BOARD_SETUP) && defined(CONFIG_PCI)
-extern void ft_board_pci_setup(void *blob, struct bd_info *bd);
+extern void ft_board_pci_setup(void *blob, bd_t *bd);
 #endif
 
 /*
@@ -73,7 +73,7 @@ int dram_init(void)
 }
 
 #if defined(CONFIG_OF_BOARD_SETUP)
-int ft_board_setup(void *blob, struct bd_info *bd)
+int ft_board_setup(void *blob, bd_t *bd)
 {
 #ifdef CONFIG_PCI
 	ft_board_pci_setup(blob, bd);

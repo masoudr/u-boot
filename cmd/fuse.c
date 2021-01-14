@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009-2013 ADVANSEE
  * Benoît Thébaudeau <benoit.thebaudeau@advansee.com>
@@ -6,6 +5,8 @@
  * Based on the mpc512x iim code:
  * Copyright 2008 Silicon Turnkey Express, Inc.
  * Martha Marx <mmarx@silicontkx.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -40,8 +41,7 @@ static int confirm_prog(void)
 	return 0;
 }
 
-static int do_fuse(struct cmd_tbl *cmdtp, int flag, int argc,
-		   char *const argv[])
+static int do_fuse(cmd_tbl_t *cmdtp, int flag, int argc, char *const argv[])
 {
 	const char *op = argc >= 2 ? argv[1] : NULL;
 	int confirmed = argc >= 3 && !strcmp(argv[2], "-y");

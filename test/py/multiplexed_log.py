@@ -1,12 +1,13 @@
-# SPDX-License-Identifier: GPL-2.0
 # Copyright (c) 2015 Stephen Warren
 # Copyright (c) 2015-2016, NVIDIA CORPORATION. All rights reserved.
+#
+# SPDX-License-Identifier: GPL-2.0
 
 # Generate an HTML-formatted log file containing multiple streams of data,
 # each represented in a well-delineated/-structured fashion.
 
+import cgi
 import datetime
-import html
 import os.path
 import shutil
 import subprocess
@@ -51,7 +52,7 @@ class LogfileStream(object):
         """Write data to the log stream.
 
         Args:
-            data: The data to write to the file.
+            data: The data to write tot he file.
             implicit: Boolean indicating whether data actually appeared in the
                 stream, or was implicitly generated. A valid use-case is to
                 repeat a shell prompt at the start of each separate log
@@ -64,8 +65,7 @@ class LogfileStream(object):
 
         self.logfile.write(self, data, implicit)
         if self.chained_file:
-            # Chained file is console, convert things a little
-            self.chained_file.write((data.encode('ascii', 'replace')).decode())
+            self.chained_file.write(data)
 
     def flush(self):
         """Flush the log stream, to ensure correct log interleaving.
@@ -137,10 +137,6 @@ class RunAndLog(object):
             p = subprocess.Popen(cmd, cwd=cwd,
                 stdin=None, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             (stdout, stderr) = p.communicate()
-            if stdout is not None:
-                stdout = stdout.decode('utf-8')
-            if stderr is not None:
-                stderr = stderr.decode('utf-8')
             output = ''
             if stdout:
                 if stderr:
@@ -220,7 +216,7 @@ class Logfile(object):
             Nothing.
         """
 
-        self.f = open(fn, 'wt', encoding='utf-8')
+        self.f = open(fn, 'wt')
         self.last_stream = None
         self.blocks = []
         self.cur_evt = 1
@@ -228,7 +224,6 @@ class Logfile(object):
         self.timestamp_start = self._get_time()
         self.timestamp_prev = self.timestamp_start
         self.timestamp_blocks = []
-        self.seen_warning = False
 
         shutil.copy(mod_dir + '/multiplexed_log.css', os.path.dirname(fn))
         self.f.write('''\
@@ -257,7 +252,6 @@ $(document).ready(function () {
     passed_bcs = passed_bcs.not(":has(.status-xfail)");
     passed_bcs = passed_bcs.not(":has(.status-xpass)");
     passed_bcs = passed_bcs.not(":has(.status-skipped)");
-    passed_bcs = passed_bcs.not(":has(.status-warning)");
     // Hide the passed blocks
     passed_bcs.addClass("hidden");
     // Flip the expand/contract button hiding for those blocks.
@@ -319,9 +313,8 @@ $(document).ready(function () {
 
     # The set of characters that should be represented as hexadecimal codes in
     # the log file.
-    _nonprint = {ord('%')}
-    _nonprint.update({c for c in range(0, 32) if c not in (9, 10)})
-    _nonprint.update({c for c in range(127, 256)})
+    _nonprint = ('%' + ''.join(chr(c) for c in range(0, 32) if c not in (9, 10)) +
+                 ''.join(chr(c) for c in range(127, 256)))
 
     def _escape(self, data):
         """Render data format suitable for inclusion in an HTML document.
@@ -337,9 +330,9 @@ $(document).ready(function () {
         """
 
         data = data.replace(chr(13), '')
-        data = ''.join((ord(c) in self._nonprint) and ('%%%02x' % ord(c)) or
+        data = ''.join((c in self._nonprint) and ('%%%02x' % ord(c)) or
                        c for c in data)
-        data = html.escape(data)
+        data = cgi.escape(data)
         return data
 
     def _terminate_stream(self):
@@ -485,22 +478,7 @@ $(document).ready(function () {
             Nothing.
         """
 
-        self.seen_warning = True
         self._note("warning", msg)
-
-    def get_and_reset_warning(self):
-        """Get and reset the log warning flag.
-
-        Args:
-            None
-
-        Returns:
-            Whether a warning was seen since the last call.
-        """
-
-        ret = self.seen_warning
-        self.seen_warning = False
-        return ret
 
     def info(self, msg):
         """Write an informational note to the log file.
@@ -563,19 +541,6 @@ $(document).ready(function () {
         """
 
         self._note("status-pass", msg, anchor)
-
-    def status_warning(self, msg, anchor=None):
-        """Write a note to the log file describing test(s) which passed.
-
-        Args:
-            msg: A message describing the passed test(s).
-            anchor: Optional internal link target.
-
-        Returns:
-            Nothing.
-        """
-
-        self._note("status-warning", msg, anchor)
 
     def status_skipped(self, msg, anchor=None):
         """Write a note to the log file describing skipped test(s).

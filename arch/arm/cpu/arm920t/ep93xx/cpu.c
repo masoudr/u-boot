@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Cirrus Logic EP93xx CPU-specific support.
  *
@@ -6,10 +5,11 @@
  *
  * Copyright (C) 2004, 2005
  * Cory T. Tusar, Videon Central, Inc., <ctusar@videon-central.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
 #include <asm/arch/ep93xx.h>
 #include <asm/io.h>
 

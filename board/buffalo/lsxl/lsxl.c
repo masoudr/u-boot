@@ -1,19 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2012 Michael Walle
  * Michael Walle <michael@walle.cc>
  *
  * Based on sheevaplug/sheevaplug.c by
  *   Marvell Semiconductor <www.marvell.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <bootstage.h>
-#include <command.h>
-#include <env.h>
-#include <env_internal.h>
-#include <flash.h>
-#include <init.h>
 #include <net.h>
 #include <malloc.h>
 #include <netdev.h>
@@ -24,7 +19,6 @@
 #include <asm/arch/cpu.h>
 #include <asm/arch/mpp.h>
 #include <asm/arch/gpio.h>
-#include <linux/delay.h>
 
 #include "lsxl.h"
 

@@ -1,15 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2007 - 2013 Tensilica Inc.
  * (C) Copyright 2014 - 2016 Cadence Design Systems Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
 #include <dm.h>
-#include <init.h>
 #include <dm/platform_data/net_ethoc.h>
-#include <env.h>
 #include <linux/ctype.h>
 #include <linux/string.h>
 #include <linux/stringify.h>
@@ -46,6 +45,14 @@ const char *description = "";
 int checkboard(void)
 {
 	printf("Board: %s: %sTensilica bitstream\n", board, description);
+	return 0;
+}
+
+int dram_init_banksize(void)
+{
+	gd->bd->bi_memstart = PHYSADDR(CONFIG_SYS_SDRAM_BASE);
+	gd->bd->bi_memsize = CONFIG_SYS_SDRAM_SIZE;
+
 	return 0;
 }
 
@@ -93,7 +100,7 @@ int misc_init_r(void)
 	return 0;
 }
 
-U_BOOT_DRVINFO(sysreset) = {
+U_BOOT_DEVICE(sysreset) = {
 	.name = "xtfpga_sysreset",
 };
 
@@ -104,7 +111,7 @@ static struct ethoc_eth_pdata ethoc_pdata = {
 	.packet_base = CONFIG_SYS_ETHOC_BUFFER_ADDR,
 };
 
-U_BOOT_DRVINFO(ethoc) = {
+U_BOOT_DEVICE(ethoc) = {
 	.name = "ethoc",
-	.plat = &ethoc_pdata,
+	.platdata = &ethoc_pdata,
 };

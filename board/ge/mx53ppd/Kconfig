@@ -1,3 +1,4 @@
+# SPDX-License-Identifier:	GPL-2.0+
 
 if TARGET_MX53PPD
 
@@ -12,7 +13,5 @@ config SYS_SOC
 
 config SYS_CONFIG_NAME
 	default "mx53ppd"
-
-source "board/ge/common/Kconfig"
 
 endif

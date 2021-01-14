@@ -1,16 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Freescale i.MX28 Boot setup
  *
  * Copyright (C) 2011 Marek Vasut <marek.vasut@gmail.com>
  * on behalf of DENX Software Engineering GmbH
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <config.h>
-#include <init.h>
-#include <log.h>
-#include <serial.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/sys_proto.h>
@@ -22,12 +20,14 @@
 DECLARE_GLOBAL_DATA_PTR;
 static gd_t gdata __section(".data");
 #ifdef CONFIG_SPL_SERIAL_SUPPORT
-static struct bd_info bdata __section(".data");
+static bd_t bdata __section(".data");
 #endif
 
 /*
  * This delay function is intended to be used only in early stage of boot, where
- * clock are not set up yet.
+ * clock are not set up yet. The timer used here is reset on every boot and
+ * takes a few seconds to roll. The boot doesn't take that long, so to keep the
+ * code simple, it doesn't take rolling into consideration.
  */
 void early_delay(int delay)
 {
@@ -35,7 +35,8 @@ void early_delay(int delay)
 		(struct mxs_digctl_regs *)MXS_DIGCTL_BASE;
 
 	uint32_t st = readl(&digctl_regs->hw_digctl_microseconds);
-	while (readl(&digctl_regs->hw_digctl_microseconds) - st <= delay)
+	st += delay;
+	while (st > readl(&digctl_regs->hw_digctl_microseconds))
 		;
 }
 
@@ -119,7 +120,8 @@ void mxs_common_spl_init(const uint32_t arg, const uint32_t *resptr,
 			 const iomux_cfg_t *iomux_setup,
 			 const unsigned int iomux_size)
 {
-	struct mxs_spl_data *data = MXS_SPL_DATA;
+	struct mxs_spl_data *data = (struct mxs_spl_data *)
+		((CONFIG_SYS_TEXT_BASE - sizeof(struct mxs_spl_data)) & ~0xf);
 	uint8_t bootmode = mxs_get_bootmode_index();
 	gd = &gdata;
 
@@ -145,7 +147,6 @@ void mxs_common_spl_init(const uint32_t arg, const uint32_t *resptr,
 	}
 }
 
-#ifndef CONFIG_SPL_FRAMEWORK
 /* Support aparatus */
 inline void board_init_f(unsigned long bootflag)
 {
@@ -158,4 +159,3 @@ inline void board_init_r(gd_t *id, ulong dest_addr)
 	for (;;)
 		;
 }
-#endif

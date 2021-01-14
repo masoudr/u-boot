@@ -1,25 +1,22 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2000-2011
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 #include <common.h>
-#include <bootstage.h>
 #include <command.h>
-#include <cpu_func.h>
-#include <image.h>
-#include <log.h>
 #include <part.h>
 
-int common_diskboot(struct cmd_tbl *cmdtp, const char *intf, int argc,
+int common_diskboot(cmd_tbl_t *cmdtp, const char *intf, int argc,
 		    char *const argv[])
 {
 	__maybe_unused int dev;
 	int part;
 	ulong addr = CONFIG_SYS_LOAD_ADDR;
 	ulong cnt;
-	struct disk_partition info;
-#if defined(CONFIG_LEGACY_IMAGE_FORMAT)
+	disk_partition_t info;
+#if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 	image_header_t *hdr;
 #endif
 	struct blk_desc *dev_desc;
@@ -66,7 +63,7 @@ int common_diskboot(struct cmd_tbl *cmdtp, const char *intf, int argc,
 	bootstage_mark(BOOTSTAGE_ID_IDE_PART_READ);
 
 	switch (genimg_get_format((void *) addr)) {
-#if defined(CONFIG_LEGACY_IMAGE_FORMAT)
+#if defined(CONFIG_IMAGE_FORMAT_LEGACY)
 	case IMAGE_FORMAT_LEGACY:
 		hdr = (image_header_t *) addr;
 
@@ -127,7 +124,7 @@ int common_diskboot(struct cmd_tbl *cmdtp, const char *intf, int argc,
 	flush_cache(addr, (cnt+1)*info.blksz);
 
 	/* Loading ok, update default load address */
-	image_load_addr = addr;
+	load_addr = addr;
 
 	return bootm_maybe_autostart(cmdtp, argv[0]);
 }

@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2010-2011 Freescale Semiconductor, Inc.
  *
  * Configuration settings for the Freescale i.MX6Q Armadillo2 board.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __CONFIG_H
@@ -13,6 +14,7 @@
 /* Size of malloc() pool */
 #define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 2 * 1024 * 1024)
 
+#define CONFIG_MXC_UART
 #define CONFIG_MXC_UART_BASE		UART4_BASE
 
 /* MMC Configs */
@@ -20,6 +22,7 @@
 #define CONFIG_SYS_FSL_USDHC_NUM	2
 
 #define	CONFIG_FEC_MXC
+#define	CONFIG_MII
 #define IMX_FEC_BASE			ENET_BASE_ADDR
 #define	CONFIG_FEC_XCV_TYPE		RGMII
 #define CONFIG_FEC_MXC_PHYADDR		0
@@ -101,8 +104,11 @@
 #define CONFIG_ARP_TIMEOUT	200UL
 
 /* Miscellaneous configurable options */
+#define CONFIG_SYS_MEMTEST_START	0x10000000
+#define CONFIG_SYS_MEMTEST_END		0x10010000
 
 /* Physical Memory Map */
+#define CONFIG_NR_DRAM_BANKS		1
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
 
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
@@ -115,6 +121,9 @@
 	(CONFIG_SYS_INIT_RAM_ADDR + CONFIG_SYS_INIT_SP_OFFSET)
 
 /* Environment organization */
+#define CONFIG_ENV_OFFSET		(6 * 64 * 1024)
+#define CONFIG_ENV_SIZE			(8 * 1024)
+#define CONFIG_SYS_MMC_ENV_DEV		1
 
 /* USB Configs */
 #ifdef CONFIG_CMD_USB

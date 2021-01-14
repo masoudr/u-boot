@@ -1,14 +1,13 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2017 Rockchip Electronics Co., Ltd
  * Author: Andy Yan <andy.yan@rock-chips.com>
+ * SPDX-License-Identifier:     GPL-2.0+
  */
 #ifndef _ASM_ARCH_CRU_RK3368_H
 #define _ASM_ARCH_CRU_RK3368_H
 
-#ifndef __ASSEMBLY__
-#include <linux/bitops.h>
-#endif
+#include <common.h>
+
 
 /* RK3368 clock numbers */
 enum rk3368_pll_id {
@@ -96,13 +95,6 @@ enum {
 	CLK_SARADC_DIV_CON_WIDTH	= 8,
 
 	/* CLKSEL43_CON */
-	GMAC_DIV_CON_SHIFT		= 0x0,
-	GMAC_DIV_CON_MASK		= GENMASK(4, 0),
-	GMAC_PLL_SHIFT			= 6,
-	GMAC_PLL_MASK			= GENMASK(7, 6),
-	GMAC_PLL_SELECT_NEW		= (0x0 << GMAC_PLL_SHIFT),
-	GMAC_PLL_SELECT_CODEC		= (0x1 << GMAC_PLL_SHIFT),
-	GMAC_PLL_SELECT_GENERAL		= (0x2 << GMAC_PLL_SHIFT),
 	GMAC_MUX_SEL_EXTCLK             = BIT(8),
 
 	/* CLKSEL51_CON */

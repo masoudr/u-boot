@@ -1,14 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * SPL/U-Boot common functions for CompuLab CL-SOM-iMX7 module
  *
  * (C) Copyright 2017 CompuLab, Ltd. http://www.compulab.com
  *
  * Author: Uri Mashiach <uri.mashiach@compulab.co.il>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <asm-generic/gpio.h>
 #include "common.h"
 
@@ -23,7 +24,7 @@ int board_spi_cs_gpio(unsigned int bus, unsigned int cs)
 
 #endif /* CONFIG_SPI */
 
-#ifdef CONFIG_FSL_ESDHC_IMX
+#ifdef CONFIG_FSL_ESDHC
 
 int board_mmc_getcd(struct mmc *mmc)
 {
@@ -42,4 +43,4 @@ int board_mmc_getcd(struct mmc *mmc)
 	return ret;
 }
 
-#endif /* CONFIG_FSL_ESDHC_IMX */
+#endif /* CONFIG_FSL_ESDHC */

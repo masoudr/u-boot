@@ -1,6 +1,7 @@
 #ifndef _LPC32XX_I2C_H
 #define _LPC32XX_I2C_H
 
+#include <common.h>
 #include <asm/types.h>
 
 /* i2c register set */

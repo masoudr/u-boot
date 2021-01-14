@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2012
  * Valentin Lontgchamp, Keymile AG, valentin.longchamp@keymile.com
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <command.h>
-#include <log.h>
 #include <miiphy.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <mv88e6352.h>
 
@@ -233,7 +231,7 @@ int mv88e_sw_reset(const char *devname, u8 phy_addr)
 	return -ETIMEDOUT;
 }
 
-int do_mvsw_reg_read(const char *name, int argc, char *const argv[])
+int do_mvsw_reg_read(const char *name, int argc, char * const argv[])
 {
 	u16 value = 0, phyaddr, reg, port;
 	int ret;
@@ -248,7 +246,7 @@ int do_mvsw_reg_read(const char *name, int argc, char *const argv[])
 	return ret;
 }
 
-int do_mvsw_reg_write(const char *name, int argc, char *const argv[])
+int do_mvsw_reg_write(const char *name, int argc, char * const argv[])
 {
 	u16 value = 0, phyaddr, reg, port;
 	int ret;
@@ -264,7 +262,7 @@ int do_mvsw_reg_write(const char *name, int argc, char *const argv[])
 }
 
 
-int do_mvsw_reg(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
+int do_mvsw_reg(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 {
 	int ret;
 	const char *cmd, *ethname;

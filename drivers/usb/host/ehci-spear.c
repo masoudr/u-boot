@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2010
  * Armando Visconti, ST Micoelectronics, <armando.visconti@st.com>.
@@ -6,13 +5,13 @@
  * (C) Copyright 2009
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Prafulla Wadaskar <prafulla@marvell.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <log.h>
 #include <asm/io.h>
 #include <usb.h>
-#include <linux/delay.h>
 #include "ehci.h"
 #include <asm/arch/hardware.h>
 #include <asm/arch/spr_misc.h>

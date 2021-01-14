@@ -1,7 +1,8 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * (C) Copyright 2002-2008
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <stdint.h>
@@ -159,3 +160,5 @@ int fw_env_close(struct env_opts *opts);
  *  version string of the library
  */
 char *fw_env_version(void);
+
+unsigned long crc32(unsigned long, const unsigned char *, unsigned);

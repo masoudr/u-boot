@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * drivers/mmc/sh_sdhi.c
  *
@@ -7,17 +6,14 @@
  * Copyright (C) 2011,2013-2017 Renesas Electronics Corporation
  * Copyright (C) 2014 Nobuhiro Iwamatsu <nobuhiro.iwamatsu.yj@renesas.com>
  * Copyright (C) 2008-2009 Renesas Solutions Corp.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
-#include <log.h>
 #include <malloc.h>
 #include <mmc.h>
 #include <dm.h>
-#include <part.h>
-#include <dm/device_compat.h>
-#include <linux/bitops.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/compat.h>
 #include <linux/io.h>
@@ -784,7 +780,8 @@ int sh_sdhi_init(unsigned long addr, int ch, unsigned long quirks)
 
 	return ret;
 error:
-	free(host);
+	if (host)
+		free(host);
 	return ret;
 }
 
@@ -818,14 +815,14 @@ static const struct dm_mmc_ops sh_sdhi_dm_ops = {
 
 static int sh_sdhi_dm_bind(struct udevice *dev)
 {
-	struct sh_sdhi_plat *plat = dev_get_plat(dev);
+	struct sh_sdhi_plat *plat = dev_get_platdata(dev);
 
 	return mmc_bind(dev, &plat->mmc, &plat->cfg);
 }
 
 static int sh_sdhi_dm_probe(struct udevice *dev)
 {
-	struct sh_sdhi_plat *plat = dev_get_plat(dev);
+	struct sh_sdhi_plat *plat = dev_get_platdata(dev);
 	struct sh_sdhi_host *host = dev_get_priv(dev);
 	struct mmc_uclass_priv *upriv = dev_get_uclass_priv(dev);
 	struct clk sh_sdhi_clk;
@@ -833,7 +830,7 @@ static int sh_sdhi_dm_probe(struct udevice *dev)
 	fdt_addr_t base;
 	int ret;
 
-	base = dev_read_addr(dev);
+	base = devfdt_get_addr(dev);
 	if (base == FDT_ADDR_T_NONE)
 		return -EINVAL;
 
@@ -902,8 +899,8 @@ U_BOOT_DRIVER(sh_sdhi_mmc) = {
 	.of_match		= sh_sdhi_sd_match,
 	.bind			= sh_sdhi_dm_bind,
 	.probe			= sh_sdhi_dm_probe,
-	.priv_auto	= sizeof(struct sh_sdhi_host),
-	.plat_auto	= sizeof(struct sh_sdhi_plat),
+	.priv_auto_alloc_size	= sizeof(struct sh_sdhi_host),
+	.platdata_auto_alloc_size = sizeof(struct sh_sdhi_plat),
 	.ops			= &sh_sdhi_dm_ops,
 };
 #endif

@@ -1,13 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
- * Copyright 2008-2016 Freescale Semiconductor, Inc.
- * Copyright 2017-2018 NXP Semiconductor
+ * Copyright 2008-2014 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #include <common.h>
 #include <fsl_ddr_sdram.h>
-#include <log.h>
-#include <asm/bitops.h>
 
 #include <fsl_ddr.h>
 
@@ -236,7 +234,6 @@ compute_lowest_common_dimm_parameters(const unsigned int ctrl_num,
 	unsigned int trrds_ps = 0;
 	unsigned int trrdl_ps = 0;
 	unsigned int tccdl_ps = 0;
-	unsigned int trfc_slr_ps = 0;
 #else
 	unsigned int twr_ps = 0;
 	unsigned int twtr_ps = 0;
@@ -316,8 +313,6 @@ compute_lowest_common_dimm_parameters(const unsigned int ctrl_num,
 			       (unsigned int)dimm_params[i].trrdl_ps);
 		tccdl_ps = max(tccdl_ps,
 			       (unsigned int)dimm_params[i].tccdl_ps);
-		trfc_slr_ps = max(trfc_slr_ps,
-				  (unsigned int)dimm_params[i].trfc_slr_ps);
 #else
 		twr_ps = max(twr_ps, (unsigned int)dimm_params[i].twr_ps);
 		twtr_ps = max(twtr_ps, (unsigned int)dimm_params[i].twtr_ps);
@@ -370,7 +365,6 @@ compute_lowest_common_dimm_parameters(const unsigned int ctrl_num,
 	outpdimm->trrds_ps = trrds_ps;
 	outpdimm->trrdl_ps = trrdl_ps;
 	outpdimm->tccdl_ps = tccdl_ps;
-	outpdimm->trfc_slr_ps = trfc_slr_ps;
 #else
 	outpdimm->twtr_ps = twtr_ps;
 	outpdimm->trfc_ps = trfc_ps;
@@ -573,7 +567,6 @@ compute_lowest_common_dimm_parameters(const unsigned int ctrl_num,
 	debug("trrds_ps = %u\n", trrds_ps);
 	debug("trrdl_ps = %u\n", trrdl_ps);
 	debug("tccdl_ps = %u\n", tccdl_ps);
-	debug("trfc_slr_ps = %u\n", trfc_slr_ps);
 #else
 	debug("twtr_ps   = %u\n", outpdimm->twtr_ps);
 	debug("trfc_ps   = %u\n", outpdimm->trfc_ps);

@@ -1,15 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2007, Guennadi Liakhovetski <lg@denx.de>
  *
  * (C) Copyright 2008-2010 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <net.h>
 #include <asm/io.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/crm_regs.h>
@@ -19,7 +17,7 @@
 #include <power/pmic.h>
 #include <fsl_pmic.h>
 #include <mmc.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <mc9sdz60.h>
 #include <mc13892.h>
 #include <linux/types.h>
@@ -254,7 +252,7 @@ int board_late_init(void)
 	return 0;
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 #if defined(CONFIG_SMC911X)
 	int rc = smc911x_initialize(0, CONFIG_SMC911X_BASE);
@@ -264,11 +262,11 @@ int board_eth_init(struct bd_info *bis)
 	return cpu_eth_init(bis);
 }
 
-#if defined(CONFIG_FSL_ESDHC_IMX)
+#if defined(CONFIG_FSL_ESDHC)
 
 struct fsl_esdhc_cfg esdhc_cfg = {MMC_SDHC1_BASE_ADDR};
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	static const iomux_v3_cfg_t sdhc1_pads[] = {
 		MX35_PAD_SD1_CMD__ESDHC1_CMD,

@@ -1,19 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) Stefano Babic <sbabic@denx.de>
  *
  * Based on other i.MX6 boards
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <common.h>
-#include <init.h>
-#include <net.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/mx6-pins.h>
-#include <env.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/gpio.h>
 #include <asm/mach-imx/mxc_i2c.h>
@@ -21,7 +17,7 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/video.h>
 #include <mmc.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <miiphy.h>
 #include <netdev.h>
 #include <asm/arch/mxc_hdmi.h>
@@ -260,7 +256,7 @@ iomux_v3_cfg_t const usdhc4_pads[] = {
 	MX6_PAD_SD4_DAT7__SD4_DATA7 | MUX_PAD_CTRL(USDHC_PAD_CTRL),
 };
 
-#ifdef CONFIG_FSL_ESDHC_IMX
+#ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg usdhc_cfg[2] = {
 	{USDHC2_BASE_ADDR},
 	{USDHC4_BASE_ADDR},
@@ -285,7 +281,7 @@ int board_mmc_getcd(struct mmc *mmc)
 	return ret;
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 #ifndef CONFIG_SPL_BUILD
 	int ret;
@@ -370,7 +366,7 @@ int overwrite_console(void)
 	return 1;
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	setup_iomux_enet();
 	enable_enet_clk(1);
@@ -485,7 +481,7 @@ int checkboard(void)
 
 #ifdef CONFIG_SPL_BUILD
 #include <spl.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 
 const struct mx6dq_iomux_ddr_regs mx6_ddr_ioregs = {
 	.dram_sdclk_0 =  0x00020030,

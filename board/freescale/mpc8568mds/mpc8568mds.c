@@ -1,14 +1,12 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2007,2009-2011 Freescale Semiconductor, Inc.
  *
  * (C) Copyright 2002 Scott McNutt <smcnutt@artesyncp.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <flash.h>
-#include <init.h>
-#include <log.h>
 #include <pci.h>
 #include <asm/processor.h>
 #include <asm/mmu.h>
@@ -19,8 +17,7 @@
 #include <spd_sdram.h>
 #include <i2c.h>
 #include <ioports.h>
-#include <linux/delay.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <fdt_support.h>
 
 #include "bcsr.h"
@@ -305,7 +302,7 @@ void pci_init_board(void)
 	porpllsr = in_be32(&gur->porpllsr);
 	io_sel = (pordevsr & MPC85xx_PORDEVSR_IO_SEL) >> 19;
 
-	debug("   %s: devdisr=%x, io_sel=%x\n", __func__, devdisr, io_sel);
+	debug ("   pci_init_board: devdisr=%x, io_sel=%x\n", devdisr, io_sel);
 
 	pci_speed = 66666000;
 	pci_32 = 1;
@@ -348,7 +345,7 @@ void pci_init_board(void)
 #endif /* CONFIG_PCI */
 
 #if defined(CONFIG_OF_BOARD_SETUP)
-int ft_board_setup(void *blob, struct bd_info *bd)
+int ft_board_setup(void *blob, bd_t *bd)
 {
 	ft_cpu_setup(blob, bd);
 

@@ -1,15 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Marvell MMC/SD/SDIO driver
  *
  * (C) Copyright 2012-2014
  * Marvell Semiconductor <www.marvell.com>
  * Written-by: Maen Suleiman, Gerald Kerma
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <errno.h>
-#include <log.h>
 #include <malloc.h>
 #include <part.h>
 #include <mmc.h>
@@ -427,7 +427,7 @@ static struct mmc_config mvebu_mmc_cfg = {
 	.b_max		= CONFIG_SYS_MMC_MAX_BLK_COUNT,
 };
 
-int mvebu_mmc_init(struct bd_info *bis)
+int mvebu_mmc_init(bd_t *bis)
 {
 	struct mmc *mmc;
 

@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -8,7 +9,8 @@
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <errno.h>
-#include <linux/bitops.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 #define MVEBU_GPIOS_PER_BANK	32
 
@@ -90,9 +92,9 @@ static int mvebu_gpio_probe(struct udevice *dev)
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
 	struct mvebu_gpio_priv *priv = dev_get_priv(dev);
 
-	priv->regs = dev_read_addr_ptr(dev);
+	priv->regs = (struct mvebu_gpio_regs *)devfdt_get_addr(dev);
 	uc_priv->gpio_count = MVEBU_GPIOS_PER_BANK;
-	priv->name[0] = 'A' + dev_seq(dev);
+	priv->name[0] = 'A' + dev->req_seq;
 	uc_priv->bank_name = priv->name;
 
 	return 0;
@@ -117,5 +119,5 @@ U_BOOT_DRIVER(gpio_mvebu) = {
 	.of_match		= mvebu_gpio_ids,
 	.ops			= &mvebu_gpio_ops,
 	.probe			= mvebu_gpio_probe,
-	.priv_auto	= sizeof(struct mvebu_gpio_priv),
+	.priv_auto_alloc_size	= sizeof(struct mvebu_gpio_priv),
 };

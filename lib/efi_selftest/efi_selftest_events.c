@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * efi_selftest_events
  *
  * Copyright (c) 2017 Heinrich Schuchardt <xypron.glpk@gmx.de>
+ *
+ * SPDX-License-Identifier:     GPL-2.0+
  *
  * This unit test uses timer events to check the implementation
  * of the following boottime services:
@@ -17,7 +18,7 @@ static unsigned int timer_ticks;
 static struct efi_boot_services *boottime;
 
 /*
- * Notification function, increments the notification count if parameter
+ * Notification function, increments the notfication count if parameter
  * context is provided.
  *
  * @event	notified event
@@ -141,26 +142,26 @@ static int execute(void)
 		efi_st_error("WaitForEvent returned wrong index\n");
 		return EFI_ST_FAILURE;
 	}
+	efi_st_printf("Notification count periodic: %u\n", timer_ticks);
 	if (timer_ticks < 8 || timer_ticks > 12) {
-		efi_st_printf("Notification count periodic: %u\n", timer_ticks);
 		efi_st_error("Incorrect timing of events\n");
 		return EFI_ST_FAILURE;
 	}
 	ret = boottime->set_timer(event_notify, EFI_TIMER_STOP, 0);
-	if (ret != EFI_SUCCESS) {
+	if (index != 0) {
 		efi_st_error("Could not cancel timer\n");
 		return EFI_ST_FAILURE;
 	}
 	/* Set 10 ms timer */
 	timer_ticks = 0;
 	ret = boottime->set_timer(event_notify, EFI_TIMER_RELATIVE, 100000);
-	if (ret != EFI_SUCCESS) {
+	if (index != 0) {
 		efi_st_error("Could not set timer\n");
 		return EFI_ST_FAILURE;
 	}
 	/* Set 100 ms timer */
 	ret = boottime->set_timer(event_wait, EFI_TIMER_PERIODIC, 1000000);
-	if (ret != EFI_SUCCESS) {
+	if (index != 0) {
 		efi_st_error("Could not set timer\n");
 		return EFI_ST_FAILURE;
 	}
@@ -169,9 +170,8 @@ static int execute(void)
 		efi_st_error("Could not wait for event\n");
 		return EFI_ST_FAILURE;
 	}
+	efi_st_printf("Notification count single shot: %u\n", timer_ticks);
 	if (timer_ticks != 1) {
-		efi_st_printf("Notification count single shot: %u\n",
-			      timer_ticks);
 		efi_st_error("Single shot timer failed\n");
 		return EFI_ST_FAILURE;
 	}
@@ -180,9 +180,8 @@ static int execute(void)
 		efi_st_error("Could not wait for event\n");
 		return EFI_ST_FAILURE;
 	}
+	efi_st_printf("Notification count stopped timer: %u\n", timer_ticks);
 	if (timer_ticks != 1) {
-		efi_st_printf("Notification count stopped timer: %u\n",
-			      timer_ticks);
 		efi_st_error("Stopped timer fired\n");
 		return EFI_ST_FAILURE;
 	}

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Cirrus Logic EP93xx ethernet MAC / MII driver.
  *
@@ -14,17 +13,16 @@
  * (C) Copyright 2002 2003
  * Adam Bezanson, Network Audio Technologies, Inc.
  * <bezanson@netaudiotech.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <command.h>
 #include <common.h>
-#include <log.h>
-#include <net.h>
 #include <asm/arch/ep93xx.h>
 #include <asm/io.h>
 #include <malloc.h>
 #include <miiphy.h>
-#include <linux/bug.h>
 #include <linux/types.h>
 #include "ep93xx_eth.h"
 
@@ -165,7 +163,7 @@ static void ep93xx_mac_reset(struct eth_device *dev)
 }
 
 /* Eth device open */
-static int ep93xx_eth_open(struct eth_device *dev, struct bd_info *bd)
+static int ep93xx_eth_open(struct eth_device *dev, bd_t *bd)
 {
 	struct ep93xx_priv *priv = GET_PRIV(dev);
 	struct mac_regs *mac = GET_REGS(dev);
@@ -421,7 +419,7 @@ eth_send_out:
 }
 
 #if defined(CONFIG_MII)
-int ep93xx_miiphy_initialize(struct bd_info * const bd)
+int ep93xx_miiphy_initialize(bd_t * const bd)
 {
 	int retval;
 	struct mii_dev *mdiodev = mdio_alloc();

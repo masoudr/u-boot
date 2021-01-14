@@ -1,15 +1,16 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Google, Inc
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <mmc.h>
-#include <part.h>
 #include <dm/test.h>
-#include <test/test.h>
 #include <test/ut.h>
+
+DECLARE_GLOBAL_DATA_PTR;
 
 /*
  * Basic test of the mmc uclass. We could expand this by implementing an MMC
@@ -23,7 +24,7 @@ static int dm_test_mmc_base(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_mmc_base, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_mmc_base, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);
 
 static int dm_test_mmc_blk(struct unit_test_state *uts)
 {
@@ -42,4 +43,4 @@ static int dm_test_mmc_blk(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_mmc_blk, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_mmc_blk, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);

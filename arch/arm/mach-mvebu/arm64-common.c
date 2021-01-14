@@ -1,16 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2016 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <fdtdec.h>
-#include <init.h>
-#include <asm/cache.h>
-#include <asm/ptrace.h>
-#include <linux/libfdt.h>
-#include <linux/sizes.h>
+#include <libfdt.h>
 #include <pci.h>
 #include <asm/io.h>
 #include <asm/system.h>
@@ -47,28 +44,18 @@ const struct mbus_dram_target_info *mvebu_mbus_dram_info(void)
 	return NULL;
 }
 
-__weak int dram_init_banksize(void)
+/* DRAM init code ... */
+
+int dram_init_banksize(void)
 {
-	if (CONFIG_IS_ENABLED(ARMADA_8K))
-		return a8k_dram_init_banksize();
-	else if (CONFIG_IS_ENABLED(ARMADA_3700))
-		return a3700_dram_init_banksize();
-	else
-		return fdtdec_setup_memory_banksize();
+	fdtdec_setup_memory_banksize();
+
+	return 0;
 }
 
-__weak int dram_init(void)
+int dram_init(void)
 {
-	if (CONFIG_IS_ENABLED(ARMADA_8K)) {
-		gd->ram_size = a8k_dram_scan_ap_sz();
-		if (gd->ram_size != 0)
-			return 0;
-	}
-
-	if (CONFIG_IS_ENABLED(ARMADA_3700))
-		return a3700_dram_init();
-
-	if (fdtdec_setup_mem_size_base() != 0)
+	if (fdtdec_setup_memory_size() != 0)
 		return -EINVAL;
 
 	return 0;

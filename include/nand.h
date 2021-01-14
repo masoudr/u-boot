@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0 */
 /*
  * (C) Copyright 2005
  * 2N Telekomunikace, a.s. <www.2n.cz>
  * Ladislav Michl <michl@2n.cz>
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #ifndef _NAND_H_
@@ -120,7 +121,6 @@ int nand_unlock(struct mtd_info *mtd, loff_t start, size_t length,
 		int allexcept);
 int nand_get_lock_status(struct mtd_info *mtd, loff_t offset);
 
-u32 nand_spl_adjust_offset(u32 sector, u32 offs);
 int nand_spl_load_image(uint32_t offs, unsigned int size, void *dst);
 int nand_spl_read_block(int block, int offset, int len, void *dst);
 void nand_deselect(void);

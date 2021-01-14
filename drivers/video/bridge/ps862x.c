@@ -1,16 +1,15 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <errno.h>
 #include <i2c.h>
-#include <log.h>
 #include <video_bridge.h>
-#include <linux/delay.h>
 #include <power/regulator.h>
 
 DECLARE_GLOBAL_DATA_PTR;
@@ -37,7 +36,7 @@ DECLARE_GLOBAL_DATA_PTR;
 static int ps8622_write(struct udevice *dev, unsigned addr_off,
 			unsigned char reg_addr, unsigned char value)
 {
-	struct dm_i2c_chip *chip = dev_get_parent_plat(dev);
+	struct dm_i2c_chip *chip = dev_get_parent_platdata(dev);
 	uint8_t buf[2];
 	struct i2c_msg msg;
 	int ret;

@@ -1,13 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Broadcom Corporation.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <init.h>
-#include <net.h>
-#include <asm/cache.h>
 #include <asm/io.h>
 #include <config.h>
 #include <netdev.h>
@@ -75,7 +72,7 @@ void smp_waitloop(unsigned previous_address)
 #endif
 
 #ifdef CONFIG_BCM_SF2_ETH
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	int rc = -1;
 	printf("Registering BCM sf2 eth\n");

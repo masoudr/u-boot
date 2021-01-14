@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2017 Google, Inc
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -9,7 +10,6 @@
 #include <asm/state.h>
 #include <asm/test.h>
 #include <dm/test.h>
-#include <test/test.h>
 #include <test/ut.h>
 
 /* Test that watchdog driver functions are called */
@@ -38,4 +38,4 @@ static int dm_test_wdt_base(struct unit_test_state *uts)
 
 	return 0;
 }
-DM_TEST(dm_test_wdt_base, UT_TESTF_SCAN_PDATA | UT_TESTF_SCAN_FDT);
+DM_TEST(dm_test_wdt_base, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);

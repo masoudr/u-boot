@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0
 /*
  * MUSB OTG driver peripheral support
  *
@@ -6,12 +5,11 @@
  * Copyright (C) 2005-2006 by Texas Instruments
  * Copyright (C) 2006-2007 Nokia Corporation
  * Copyright (C) 2009 MontaVista Software, Inc. <source@mvista.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0
  */
 
 #ifndef __UBOOT__
-#include <log.h>
-#include <dm/device_compat.h>
-#include <dm/devres.h>
 #include <linux/kernel.h>
 #include <linux/list.h>
 #include <linux/timer.h>
@@ -23,9 +21,6 @@
 #include <linux/slab.h>
 #else
 #include <common.h>
-#include <dm.h>
-#include <dm/device_compat.h>
-#include <linux/bug.h>
 #include <linux/usb/ch9.h>
 #include "linux-compat.h"
 #endif
@@ -1781,14 +1776,6 @@ static int musb_gadget_start(struct usb_gadget *g,
 		struct usb_gadget_driver *driver);
 static int musb_gadget_stop(struct usb_gadget *g,
 		struct usb_gadget_driver *driver);
-#else
-static int musb_gadget_stop(struct usb_gadget *g)
-{
-	struct musb	*musb = gadget_to_musb(g);
-
-	musb_stop(musb);
-	return 0;
-}
 #endif
 
 static const struct usb_gadget_ops musb_gadget_operations = {
@@ -1799,9 +1786,6 @@ static const struct usb_gadget_ops musb_gadget_operations = {
 	.vbus_draw		= musb_gadget_vbus_draw,
 	.pullup			= musb_gadget_pullup,
 #ifndef __UBOOT__
-	.udc_start		= musb_gadget_start,
-	.udc_stop		= musb_gadget_stop,
-#else
 	.udc_start		= musb_gadget_start,
 	.udc_stop		= musb_gadget_stop,
 #endif

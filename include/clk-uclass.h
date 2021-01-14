@@ -1,8 +1,9 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (c) 2015 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
  * Copyright (c) 2016, NVIDIA CORPORATION.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _CLK_UCLASS_H
@@ -53,22 +54,14 @@ struct clk_ops {
 	 */
 	int (*request)(struct clk *clock);
 	/**
-	 * rfree - Free a previously requested clock.
+	 * free - Free a previously requested clock.
 	 *
 	 * This is the implementation of the client clk_free() API.
 	 *
 	 * @clock:	The clock to free.
 	 * @return 0 if OK, or a negative error code.
 	 */
-	int (*rfree)(struct clk *clock);
-	/**
-	 * round_rate() - Adjust a rate to the exact rate a clock can provide.
-	 *
-	 * @clk:	The clock to manipulate.
-	 * @rate:	Desidered clock rate in Hz.
-	 * @return rounded rate in Hz, or -ve error code.
-	 */
-	ulong (*round_rate)(struct clk *clk, ulong rate);
+	int (*free)(struct clk *clock);
 	/**
 	 * get_rate() - Get current clock rate.
 	 *
@@ -84,14 +77,6 @@ struct clk_ops {
 	 * @return new rate, or -ve error code.
 	 */
 	ulong (*set_rate)(struct clk *clk, ulong rate);
-	/**
-	 * set_parent() - Set current clock parent
-	 *
-	 * @clk:        The clock to manipulate.
-	 * @parent:     New clock parent.
-	 * @return zero on success, or -ve error code.
-	 */
-	int (*set_parent)(struct clk *clk, struct clk *parent);
 	/**
 	 * enable() - Enable a clock.
 	 *

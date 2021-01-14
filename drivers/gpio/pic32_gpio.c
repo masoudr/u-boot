@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (c) 2015 Microchip Technology Inc
  * Purna Chandra Mandal <purna.mandal@microchip.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -10,7 +11,6 @@
 #include <malloc.h>
 #include <asm/io.h>
 #include <asm/gpio.h>
-#include <linux/bitops.h>
 #include <linux/compat.h>
 #include <mach/pic32.h>
 
@@ -161,5 +161,5 @@ U_BOOT_DRIVER(gpio_pic32) = {
 	.of_match	= pic32_gpio_ids,
 	.ops		= &gpio_pic32_ops,
 	.probe		= pic32_gpio_probe,
-	.priv_auto	= sizeof(struct pic32_gpio_priv),
+	.priv_auto_alloc_size	= sizeof(struct pic32_gpio_priv),
 };

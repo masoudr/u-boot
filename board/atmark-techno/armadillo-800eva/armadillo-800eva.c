@@ -21,8 +21,6 @@
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <init.h>
 #include <malloc.h>
 #include <asm/processor.h>
 #include <asm/mach-types.h>
@@ -315,6 +313,10 @@ int dram_init(void)
 
 	return 0;
 }
+
+const struct rmobile_sysinfo sysinfo = {
+	CONFIG_ARCH_RMOBILE_BOARD_STRING
+};
 
 int board_late_init(void)
 {

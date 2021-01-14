@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Atmel I2C driver.
  *
  * (C) Copyright 2016 Songjun Wu <songjun.wu@atmel.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <malloc.h>
 #include <asm/io.h>
 #include <common.h>
 #include <clk.h>
@@ -219,13 +219,13 @@ int at91_i2c_get_bus_speed(struct udevice *dev)
 	return bus->speed;
 }
 
-static int at91_i2c_of_to_plat(struct udevice *dev)
+static int at91_i2c_ofdata_to_platdata(struct udevice *dev)
 {
 	const void *blob = gd->fdt_blob;
 	struct at91_i2c_bus *bus = dev_get_priv(dev);
 	int node = dev_of_offset(dev);
 
-	bus->regs = dev_read_addr_ptr(dev);
+	bus->regs = (struct at91_i2c_regs *)devfdt_get_addr(dev);
 	bus->pdata = (struct at91_i2c_pdata *)dev_get_driver_data(dev);
 	bus->clock_frequency = fdtdec_get_int(blob, node,
 					      "clock-frequency", 100000);
@@ -317,8 +317,8 @@ U_BOOT_DRIVER(i2c_at91) = {
 	.id	= UCLASS_I2C,
 	.of_match = at91_i2c_ids,
 	.probe = at91_i2c_probe,
-	.of_to_plat = at91_i2c_of_to_plat,
-	.per_child_auto	= sizeof(struct dm_i2c_chip),
-	.priv_auto	= sizeof(struct at91_i2c_bus),
+	.ofdata_to_platdata = at91_i2c_ofdata_to_platdata,
+	.per_child_auto_alloc_size = sizeof(struct dm_i2c_chip),
+	.priv_auto_alloc_size = sizeof(struct at91_i2c_bus),
 	.ops	= &at91_i2c_ops,
 };

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2009
  * Heiko Schocher, DENX Software Engineering, hs@denx.de.
@@ -7,12 +6,14 @@
  * (C) Copyright 2001, 2002
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
  *
+ * SPDX-License-Identifier:	GPL-2.0+
+ *
  * This has been changed substantially by Gerald Van Baren, Custom IDEAS,
  * vanbaren@cideas.com.  It was heavily influenced by LiMon, written by
  * Neil Russell.
  *
  * NOTE: This driver should be converted to driver model before June 2017.
- * Please see doc/driver-model/i2c-howto.rst for instructions.
+ * Please see doc/driver-model/i2c-howto.txt for instructions.
  */
 
 #include <common.h>
@@ -24,8 +25,10 @@
 #include <asm/arch/gpio.h>
 #endif
 #endif
+#if defined(CONFIG_8xx)
+#include <asm/io.h>
+#endif
 #include <i2c.h>
-#include <linux/delay.h>
 
 #if defined(CONFIG_SOFT_I2C_GPIO_SCL)
 # include <asm/gpio.h>

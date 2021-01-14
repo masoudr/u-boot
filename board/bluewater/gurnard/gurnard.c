@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Bluewater Systems Snapper 9260/9G20 modules
  *
  * (C) Copyright 2011 Bluewater Systems
  *   Author: Andre Renaud <andre@bluewatersys.com>
  *   Author: Ryan Mallon <ryan@bluewatersys.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -12,13 +13,12 @@
 #include <atmel_lcdc.h>
 #include <atmel_mci.h>
 #include <dm.h>
-#include <env.h>
-#include <init.h>
 #include <lcd.h>
 #include <net.h>
 #ifndef CONFIG_DM_ETH
 #include <netdev.h>
 #endif
+#include <spi.h>
 #include <asm/gpio.h>
 #include <asm/io.h>
 #include <asm/mach-types.h>
@@ -33,7 +33,6 @@
 #include <asm/arch/clk.h>
 #include <asm/arch/gpio.h>
 #include <dm/uclass-internal.h>
-#include <linux/delay.h>
 
 #ifdef CONFIG_GURNARD_SPLASH
 #include "splash_logo.h"
@@ -236,7 +235,7 @@ void gurnard_usb_init(void)
 #endif
 
 #ifdef CONFIG_GENERIC_ATMEL_MCI
-int cpu_mmc_init(struct bd_info *bis)
+int cpu_mmc_init(bd_t *bis)
 {
 	return atmel_mci_init((void *)ATMEL_BASE_MCI0);
 }
@@ -348,7 +347,7 @@ int board_init(void)
 
 		uclass_find_first_device(UCLASS_VIDEO, &dev);
 		if (dev) {
-			struct atmel_lcd_plat *plat = dev_get_plat(dev);
+			struct atmel_lcd_platdata *plat = dev_get_platdata(dev);
 
 			plat->timing_index = 1;
 		}
@@ -399,7 +398,7 @@ int board_late_init(void)
 }
 
 #ifndef CONFIG_DM_ETH
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	return macb_eth_initialize(0, (void *)ATMEL_BASE_EMAC, 0);
 }
@@ -416,11 +415,30 @@ void reset_phy(void)
 {
 }
 
-static struct atmel_serial_plat at91sam9260_serial_plat = {
+/* SPI chip select control - only used for FPGA programming */
+#ifdef CONFIG_ATMEL_SPI
+
+int spi_cs_is_valid(unsigned int bus, unsigned int cs)
+{
+	return bus == 0 && cs == 0;
+}
+
+void spi_cs_activate(struct spi_slave *slave)
+{
+	/* We don't use chipselects for FPGA programming */
+}
+
+void spi_cs_deactivate(struct spi_slave *slave)
+{
+	/* We don't use chipselects for FPGA programming */
+}
+#endif /* CONFIG_ATMEL_SPI */
+
+static struct atmel_serial_platdata at91sam9260_serial_plat = {
 	.base_addr = ATMEL_BASE_DBGU,
 };
 
-U_BOOT_DRVINFO(at91sam9260_serial) = {
+U_BOOT_DEVICE(at91sam9260_serial) = {
 	.name	= "serial_atmel",
-	.plat = &at91sam9260_serial_plat,
+	.platdata = &at91sam9260_serial_plat,
 };

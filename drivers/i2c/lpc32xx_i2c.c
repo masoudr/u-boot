@@ -1,13 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * LPC32xx I2C interface driver
  *
  * (C) Copyright 2014-2015  DENX Software Engineering GmbH
  * Written-by: Albert ARIBAUD - 3ADEV <albert.aribaud@3adev.fr>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <log.h>
 #include <asm/io.h>
 #include <i2c.h>
 #include <linux/errno.h>
@@ -281,12 +281,8 @@ U_BOOT_I2C_ADAP_COMPLETE(lpc32xx_2, lpc32xx_i2c_init, NULL,
 #else /* CONFIG_DM_I2C */
 static int lpc32xx_i2c_probe(struct udevice *bus)
 {
-	struct lpc32xx_i2c_dev *dev = dev_get_plat(bus);
-
-	/*
-	 * FIXME: This is not permitted
-	 *	dev_seq(bus) = dev->index;
-	 */
+	struct lpc32xx_i2c_dev *dev = dev_get_platdata(bus);
+	bus->seq = dev->index;
 
 	__i2c_init(dev->base, dev->speed, 0, dev->index);
 	return 0;
@@ -295,14 +291,14 @@ static int lpc32xx_i2c_probe(struct udevice *bus)
 static int lpc32xx_i2c_probe_chip(struct udevice *bus, u32 chip_addr,
 				  u32 chip_flags)
 {
-	struct lpc32xx_i2c_dev *dev = dev_get_plat(bus);
+	struct lpc32xx_i2c_dev *dev = dev_get_platdata(bus);
 	return __i2c_probe_chip(dev->base, chip_addr);
 }
 
 static int lpc32xx_i2c_xfer(struct udevice *bus, struct i2c_msg *msg,
 		int nmsgs)
 {
-	struct lpc32xx_i2c_dev *dev = dev_get_plat(bus);
+	struct lpc32xx_i2c_dev *dev = dev_get_platdata(bus);
 	struct i2c_msg *dmsg, *omsg, dummy;
 	uint i = 0, address = 0;
 
@@ -334,13 +330,13 @@ static int lpc32xx_i2c_xfer(struct udevice *bus, struct i2c_msg *msg,
 
 static int lpc32xx_i2c_set_bus_speed(struct udevice *bus, unsigned int speed)
 {
-	struct lpc32xx_i2c_dev *dev = dev_get_plat(bus);
+	struct lpc32xx_i2c_dev *dev = dev_get_platdata(bus);
 	return __i2c_set_bus_speed(dev->base, speed, dev->index);
 }
 
 static int lpc32xx_i2c_reset(struct udevice *bus)
 {
-	struct lpc32xx_i2c_dev *dev = dev_get_plat(bus);
+	struct lpc32xx_i2c_dev *dev = dev_get_platdata(bus);
 
 	__i2c_init(dev->base, dev->speed, 0, dev->index);
 	return 0;

@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * (C) Copyright 2011
  * eInfochips Ltd. <www.einfochips.com>
@@ -6,10 +5,11 @@
  *
  * (C) Copyright 2010
  * Marvell Semiconductor <www.marvell.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <malloc.h>
 #include <asm/io.h>
 #include <linux/errno.h>
 #include "mvgpio.h"

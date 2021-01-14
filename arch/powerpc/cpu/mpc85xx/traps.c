@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * linux/arch/powerpc/kernel/traps.c
  *
@@ -13,6 +12,8 @@
  *
  * (C) Copyright 2000
  * Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 /*
@@ -20,10 +21,7 @@
  */
 
 #include <common.h>
-#include <asm/ptrace.h>
 #include <command.h>
-#include <init.h>
-#include <irq_func.h>
 #include <kgdb.h>
 #include <asm/processor.h>
 
@@ -37,7 +35,7 @@ extern unsigned long search_exception_table(unsigned long);
  * amount of memory on the system if we're unable to keep all
  * the memory mapped in.
  */
-#define END_OF_MEM	(gd->ram_base + get_effective_memsize())
+#define END_OF_MEM (gd->bd->bi_memstart + get_effective_memsize())
 
 static __inline__ void set_tsr(unsigned long val)
 {

@@ -1,13 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2017 Stefano Babic <sbabic@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <init.h>
-#include <log.h>
-#include <net.h>
 #include <asm/io.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/imx-regs.h>
@@ -19,13 +16,11 @@
 #include <asm/mach-imx/boot_mode.h>
 #include <asm/mach-imx/mxc_i2c.h>
 #include <asm/mach-imx/spi.h>
-#include <env.h>
-#include <linux/delay.h>
 #include <linux/errno.h>
 #include <asm/gpio.h>
 #include <mmc.h>
 #include <i2c.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <nand.h>
 #include <miiphy.h>
 #include <netdev.h>
@@ -117,7 +112,7 @@ static iomux_v3_cfg_t const gpios_pads[] = {
 	IOMUX_PADS(PAD_SD4_DAT3__GPIO2_IO11 | MUX_PAD_CTRL(NO_PAD_CTRL)),
 };
 
-#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
+#ifdef CONFIG_CMD_NAND
 /* NAND */
 static iomux_v3_cfg_t const nfc_pads[] = {
 	IOMUX_PADS(PAD_NANDF_CLE__NAND_CLE	| MUX_PAD_CTRL(NAND_PAD_CTRL)),
@@ -212,7 +207,7 @@ int board_mmc_getcd(struct mmc *mmc)
 }
 
 #ifndef CONFIG_SPL_BUILD
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	int ret;
 	int i;
@@ -274,7 +269,7 @@ static void setup_gpios(void)
 	SETUP_IOMUX_PADS(gpios_pads);
 }
 
-#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
+#ifdef CONFIG_CMD_NAND
 static void setup_gpmi_nand(void)
 {
 	struct mxc_ccm_reg *mxc_ccm = (struct mxc_ccm_reg *)CCM_BASE_ADDR;
@@ -332,7 +327,7 @@ int board_spi_cs_gpio(unsigned bus, unsigned cs)
 	return IMX_GPIO_NR(4, 24);
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	setup_iomux_enet();
 
@@ -361,7 +356,7 @@ int board_init(void)
 
 	setup_gpios();
 
-#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
+#ifdef CONFIG_CMD_NAND
 	setup_gpmi_nand();
 #endif
 	return 0;
@@ -405,7 +400,7 @@ int board_late_init(void)
 #ifdef CONFIG_SPL_BUILD
 #include <asm/arch/mx6-ddr.h>
 #include <spl.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 
 #define MX6_PHYFLEX_ERR006282	IMX_GPIO_NR(2, 11)
 static void phyflex_err006282_workaround(void)
@@ -562,7 +557,7 @@ static void spl_dram_init(struct mx6_ddr_sysinfo *sysinfo,
 	mx6_dram_cfg(sysinfo, &mx6_mmcd_calib, mem_ddr);
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	if (spl_boot_device() == BOOT_DEVICE_SPI)
 		printf("MMC SEtup, Boot SPI");
@@ -657,7 +652,7 @@ void board_init_f(ulong dummy)
 		.refr = 7,	/* 8 refresh commands per refresh cycle */
 	};
 
-#if defined(CONFIG_CMD_NAND) && !defined(CONFIG_SPL_BUILD)
+#ifdef CONFIG_CMD_NAND
 	/* Enable NAND */
 	setup_gpmi_nand();
 #endif

@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014, Barco (www.barco.com)
  * Copyright (C) 2014 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
@@ -14,7 +15,6 @@
 #include <asm/mach-imx/mxc_i2c.h>
 #include <i2c.h>
 #include <miiphy.h>
-#include <linux/delay.h>
 
 #include "platinum.h"
 

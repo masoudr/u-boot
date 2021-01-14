@@ -1,13 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright 2014 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <cpu_func.h>
-#include <init.h>
-#include <net.h>
-#include <vsprintf.h>
 #include <asm/arch/clock.h>
 #include <asm/io.h>
 #include <asm/arch/immap_ls102xa.h>
@@ -18,7 +15,6 @@
 #include <fsl_esdhc.h>
 #include <config.h>
 #include <fsl_wdog.h>
-#include <linux/delay.h>
 
 #include "fsl_epu.h"
 
@@ -31,7 +27,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-#if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF)
+#ifndef CONFIG_SYS_DCACHE_OFF
 
 /*
  * Bit[1] of the descriptor indicates the descriptor type,
@@ -220,7 +216,7 @@ void enable_caches(void)
 	invalidate_dcache_all();
 	set_cr(get_cr() | CR_C);
 }
-#endif /* #if !CONFIG_IS_ENABLED(SYS_DCACHE_OFF) */
+#endif /* #ifndef CONFIG_SYS_DCACHE_OFF */
 
 
 uint get_svr(void)
@@ -293,15 +289,15 @@ int print_cpuinfo(void)
 #endif
 
 #ifdef CONFIG_FSL_ESDHC
-int cpu_mmc_init(struct bd_info *bis)
+int cpu_mmc_init(bd_t *bis)
 {
 	return fsl_esdhc_mmc_init(bis);
 }
 #endif
 
-int cpu_eth_init(struct bd_info *bis)
+int cpu_eth_init(bd_t *bis)
 {
-#if defined(CONFIG_TSEC_ENET) && !defined(CONFIG_DM_ETH)
+#ifdef CONFIG_TSEC_ENET
 	tsec_standard_init(bis);
 #endif
 

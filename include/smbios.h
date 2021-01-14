@@ -1,14 +1,13 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Copyright (C) 2015, Bin Meng <bmeng.cn@gmail.com>
  *
  * Adapted from coreboot src/include/smbios.h
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef _SMBIOS_H_
 #define _SMBIOS_H_
-
-#include <dm/ofnode.h>
 
 /* SMBIOS spec version implemented */
 #define SMBIOS_MAJOR_VER	3
@@ -224,47 +223,18 @@ static inline void fill_smbios_header(void *table, int type,
  *
  * @addr:	start address to write the structure
  * @handle:	the structure's handle, a unique 16-bit number
- * @node:	node containing the information to write (ofnode_null() if none)
  * @return:	size of the structure
  */
-typedef int (*smbios_write_type)(ulong *addr, int handle, ofnode node);
+typedef int (*smbios_write_type)(ulong *addr, int handle);
 
 /**
  * write_smbios_table() - Write SMBIOS table
  *
  * This writes SMBIOS table at a given address.
  *
- * @addr:	start address to write SMBIOS table. If this is not
- *	16-byte-aligned then it will be aligned before the table is written
- * @return:	end address of SMBIOS table (and start address for next entry)
+ * @addr:	start address to write SMBIOS table
+ * @return:	end address of SMBIOS table
  */
 ulong write_smbios_table(ulong addr);
-
-/**
- * smbios_entry() - Get a valid struct smbios_entry pointer
- *
- * @address:   address where smbios tables is located
- * @size:      size of smbios table
- * @return:    NULL or a valid pointer to a struct smbios_entry
- */
-const struct smbios_entry *smbios_entry(u64 address, u32 size);
-
-/**
- * smbios_header() - Search for SMBIOS header type
- *
- * @entry:     pointer to a struct smbios_entry
- * @type:      SMBIOS type
- * @return:    NULL or a valid pointer to a struct smbios_header
- */
-const struct smbios_header *smbios_header(const struct smbios_entry *entry, int type);
-
-/**
- * smbios_string() - Return string from SMBIOS
- *
- * @header:    pointer to struct smbios_header
- * @index:     string index
- * @return:    NULL or a valid const char pointer
- */
-const char *smbios_string(const struct smbios_header *header, int index);
 
 #endif /* _SMBIOS_H_ */

@@ -1,22 +1,19 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015 Compulab, Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <i2c.h>
 #include <miiphy.h>
 #include <cpsw.h>
-#include <net.h>
 #include <asm/gpio.h>
 #include <asm/arch/sys_proto.h>
 #include <asm/emif.h>
-#include <linux/delay.h>
 #include <power/pmic.h>
 #include <power/tps65218.h>
 #include "board.h"
-#include <usb.h>
-#include <asm/omap_common.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -50,18 +47,6 @@ int board_init(void)
 	i2c_init(CONFIG_SYS_OMAP24_I2C_SPEED, CONFIG_SYS_OMAP24_I2C_SLAVE);
 	i2c_probe(TPS65218_CHIP_PM);
 
-	return 0;
-}
-
-int board_usb_init(int index, enum usb_init_type init)
-{
-	enable_usb_clocks(index);
-	return 0;
-}
-
-int board_usb_cleanup(int index, enum usb_init_type init)
-{
-	disable_usb_clocks(index);
 	return 0;
 }
 
@@ -149,7 +134,7 @@ static void board_phy_init(void)
 	mdelay(2);
 }
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	int rv;
 

@@ -1,9 +1,10 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * CAAM descriptor composition header
  * Definitions to support CAAM descriptor instruction generation
  *
  * Copyright 2008-2014 Freescale Semiconductor, Inc.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * Based on desc.h file in linux drivers/crypto/caam
  */
@@ -519,8 +520,6 @@
 #define OP_ALG_ICV_MASK		(1 << OP_ALG_ICV_SHIFT)
 #define OP_ALG_ICV_OFF		(0 << OP_ALG_ICV_SHIFT)
 #define OP_ALG_ICV_ON		(1 << OP_ALG_ICV_SHIFT)
-
-#define OP_ALG_PR_ON		0x02
 
 #define OP_ALG_DIR_SHIFT	0
 #define OP_ALG_DIR_MASK		1

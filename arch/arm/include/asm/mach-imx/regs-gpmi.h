@@ -1,4 +1,3 @@
-/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * Freescale i.MX28 GPMI Register Definitions
  *
@@ -7,6 +6,8 @@
  *
  * Based on code from LTIB:
  * Copyright 2008-2010 Freescale Semiconductor, Inc. All Rights Reserved.
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __MX28_REGS_GPMI_H__
@@ -70,11 +71,6 @@ struct mxs_gpmi_regs {
 #define	GPMI_ECCCTRL_ECC_CMD_OFFSET			13
 #define	GPMI_ECCCTRL_ECC_CMD_DECODE			(0x0 << 13)
 #define	GPMI_ECCCTRL_ECC_CMD_ENCODE			(0x1 << 13)
-#define	GPMI_ECCCTRL_RANDOMIZER_ENABLE			(1 << 11)
-#define	GPMI_ECCCTRL_RANDOMIZER_TYPE0			0
-#define	GPMI_ECCCTRL_RANDOMIZER_TYPE1			(1 << 9)
-#define	GPMI_ECCCTRL_RANDOMIZER_TYPE2			(2 << 9)
-
 #define	GPMI_ECCCTRL_ENABLE_ECC				(1 << 12)
 #define	GPMI_ECCCTRL_BUFFER_MASK_MASK			0x1ff
 #define	GPMI_ECCCTRL_BUFFER_MASK_OFFSET			0

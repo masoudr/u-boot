@@ -1,15 +1,14 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Taken from Linux v4.9 drivers/of/address.c
  *
  * Modified for U-Boot
  * Copyright (c) 2017 Google, Inc
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <log.h>
-#include <linux/bug.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <dm/of_access.h>
 #include <dm/of_addr.h>
 #include <linux/err.h>
@@ -18,8 +17,7 @@
 /* Max address size we deal with */
 #define OF_MAX_ADDR_CELLS	4
 #define OF_CHECK_ADDR_COUNT(na)	((na) > 0 && (na) <= OF_MAX_ADDR_CELLS)
-#define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && \
-				 ((ns) > 0 || gd_size_cells_0()))
+#define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
 
 static struct of_bus *of_match_bus(struct device_node *np);
 
@@ -163,6 +161,11 @@ const __be32 *of_get_address(const struct device_node *dev, int index,
 }
 EXPORT_SYMBOL(of_get_address);
 
+static int of_empty_ranges_quirk(const struct device_node *np)
+{
+	return false;
+}
+
 static int of_translate_one(const struct device_node *parent,
 			    struct of_bus *bus, struct of_bus *pbus,
 			    __be32 *addr, int na, int ns, int pna,
@@ -189,8 +192,11 @@ static int of_translate_one(const struct device_node *parent,
 	 * As far as we know, this damage only exists on Apple machines, so
 	 * This code is only enabled on powerpc. --gcl
 	 */
-
 	ranges = of_get_property(parent, rprop, &rlen);
+	if (ranges == NULL && !of_empty_ranges_quirk(parent)) {
+		debug("no ranges; cannot translate\n");
+		return 1;
+	}
 	if (ranges == NULL || rlen == 0) {
 		offset = of_read_number(addr, na);
 		memset(addr, 0, pna * 4);
@@ -313,10 +319,6 @@ u64 of_translate_address(const struct device_node *dev, const __be32 *in_addr)
 	return __of_translate_address(dev, in_addr, "ranges");
 }
 
-u64 of_translate_dma_address(const struct device_node *dev, const __be32 *in_addr)
-{
-	return __of_translate_address(dev, in_addr, "dma-ranges");
-}
 
 static int __of_address_to_resource(const struct device_node *dev,
 		const __be32 *addrp, u64 size, unsigned int flags,

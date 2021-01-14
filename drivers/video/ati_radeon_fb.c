@@ -1,10 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * ATI Radeon Video card Framebuffer driver.
  *
  * Copyright 2007 Freescale Semiconductor, Inc.
  * Zhang Wei <wei.zhang@freescale.com>
  * Jason Jin <jason.jin@freescale.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  *
  * Some codes of this file is partly ported from Linux kernel
  * ATI video framebuffer driver.
@@ -16,11 +17,9 @@
  */
 
 #include <common.h>
-#include <linux/delay.h>
 
 #include <command.h>
 #include <bios_emul.h>
-#include <env.h>
 #include <pci.h>
 #include <asm/processor.h>
 #include <linux/errno.h>

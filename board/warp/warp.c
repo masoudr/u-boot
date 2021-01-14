@@ -1,13 +1,13 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2014, 2015 O.S. Systems Software LTDA.
  * Copyright (C) 2014 Kynetics LLC.
  * Copyright (C) 2014 Revolution Robotics, Inc.
  *
  * Author: Otavio Salvador <otavio@ossystems.com.br>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
-#include <init.h>
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux.h>
 #include <asm/arch/imx-regs.h>
@@ -20,7 +20,7 @@
 #include <linux/sizes.h>
 #include <common.h>
 #include <watchdog.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <i2c.h>
 #include <mmc.h>
 #include <usb.h>
@@ -70,7 +70,7 @@ int board_mmc_getcd(struct mmc *mmc)
 	return 1;	/* Assume boot SD always present */
 }
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	static iomux_v3_cfg_t const usdhc2_pads[] = {
 		MX6_PAD_SD2_CLK__USDHC2_CLK | MUX_PAD_CTRL(USDHC_PAD_CTRL),

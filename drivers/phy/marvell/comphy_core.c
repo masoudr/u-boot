@@ -1,32 +1,28 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2015-2016 Marvell International Ltd.
  *
  * Copyright (C) 2016 Stefan Roese <sr@denx.de>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <dm.h>
 #include <fdtdec.h>
-#include <asm/io.h>
-#include <dm/device_compat.h>
-#include <linux/err.h>
 #include <linux/errno.h>
-#include <linux/libfdt.h>
+#include <asm/io.h>
 
-#include "comphy_core.h"
+#include "comphy.h"
 
 #define COMPHY_MAX_CHIP 4
 
 DECLARE_GLOBAL_DATA_PTR;
 
-static const char *get_speed_string(u32 speed)
+static char *get_speed_string(u32 speed)
 {
-	static const char * const speed_strings[] = {
-		"1.25 Gbps", "1.5 Gbps", "2.5 Gbps",
-		"3.0 Gbps", "3.125 Gbps", "5 Gbps", "6 Gbps",
-		"6.25 Gbps", "10.31 Gbps"
-	};
+	char *speed_strings[] = {"1.25 Gbps", "1.5 Gbps", "2.5 Gbps",
+				 "3.0 Gbps", "3.125 Gbps", "5 Gbps", "6 Gbps",
+				 "6.25 Gbps", "10.31 Gbps" };
 
 	if (speed < 0 || speed > PHY_SPEED_MAX)
 		return "invalid";
@@ -34,21 +30,57 @@ static const char *get_speed_string(u32 speed)
 	return speed_strings[speed];
 }
 
-static const char *get_type_string(u32 type)
+static char *get_type_string(u32 type)
 {
-	static const char * const type_strings[] = {
-		"UNCONNECTED", "PEX0", "PEX1", "PEX2", "PEX3",
-		"SATA0", "SATA1", "SATA2", "SATA3", "SGMII0",
-		"SGMII1", "SGMII2", "SGMII3", "QSGMII",
-		"USB3_HOST0", "USB3_HOST1", "USB3_DEVICE",
-		"XAUI0", "XAUI1", "XAUI2", "XAUI3",
-		"RXAUI0", "RXAUI1", "SFI", "IGNORE"
-	};
+	char *type_strings[] = {"UNCONNECTED", "PEX0", "PEX1", "PEX2", "PEX3",
+				"SATA0", "SATA1", "SATA2", "SATA3", "SGMII0",
+				"SGMII1", "SGMII2", "SGMII3", "QSGMII",
+				"USB3_HOST0", "USB3_HOST1", "USB3_DEVICE",
+				"XAUI0", "XAUI1", "XAUI2", "XAUI3",
+				"RXAUI0", "RXAUI1", "SFI", "IGNORE"};
 
 	if (type < 0 || type > PHY_TYPE_MAX)
 		return "invalid";
 
 	return type_strings[type];
+}
+
+void reg_set(void __iomem *addr, u32 data, u32 mask)
+{
+	debug("Write to address = %#010lx, data = %#010x (mask = %#010x) - ",
+	      (unsigned long)addr, data, mask);
+	debug("old value = %#010x ==> ", readl(addr));
+	reg_set_silent(addr, data, mask);
+	debug("new value %#010x\n", readl(addr));
+}
+
+void reg_set_silent(void __iomem *addr, u32 data, u32 mask)
+{
+	u32 reg_data;
+
+	reg_data = readl(addr);
+	reg_data &= ~mask;
+	reg_data |= data;
+	writel(reg_data, addr);
+}
+
+void reg_set16(void __iomem *addr, u16 data, u16 mask)
+{
+	debug("Write to address = %#010lx, data = %#06x (mask = %#06x) - ",
+	      (unsigned long)addr, data, mask);
+	debug("old value = %#06x ==> ", readw(addr));
+	reg_set_silent16(addr, data, mask);
+	debug("new value %#06x\n", readw(addr));
+}
+
+void reg_set_silent16(void __iomem *addr, u16 data, u16 mask)
+{
+	u16 reg_data;
+
+	reg_data = readw(addr);
+	reg_data &= ~mask;
+	reg_data |= data;
+	writew(reg_data, addr);
 }
 
 void comphy_print(struct chip_serdes_phy_config *chip_cfg,
@@ -69,11 +101,6 @@ void comphy_print(struct chip_serdes_phy_config *chip_cfg,
 	}
 }
 
-__weak int comphy_update_map(struct comphy_map *serdes_map, int count)
-{
-	return 0;
-}
-
 static int comphy_probe(struct udevice *dev)
 {
 	const void *blob = gd->fdt_blob;
@@ -84,7 +111,6 @@ static int comphy_probe(struct udevice *dev)
 	int lane;
 	int last_idx = 0;
 	static int current_idx;
-	int res;
 
 	/* Save base addresses for later use */
 	chip_cfg->comphy_base_addr = (void *)devfdt_get_addr_index(dev, 0);
@@ -98,20 +124,16 @@ static int comphy_probe(struct udevice *dev)
 	chip_cfg->comphy_lanes_count = fdtdec_get_int(blob, node,
 						      "max-lanes", 0);
 	if (chip_cfg->comphy_lanes_count <= 0) {
-		dev_err(dev, "comphy max lanes is wrong\n");
+		dev_err(&dev->dev, "comphy max lanes is wrong\n");
 		return -EINVAL;
 	}
 
 	chip_cfg->comphy_mux_bitcount = fdtdec_get_int(blob, node,
 						       "mux-bitcount", 0);
 	if (chip_cfg->comphy_mux_bitcount <= 0) {
-		dev_err(dev, "comphy mux bit count is wrong\n");
+		dev_err(&dev->dev, "comphy mux bit count is wrong\n");
 		return -EINVAL;
 	}
-
-	chip_cfg->comphy_mux_lane_order =
-		fdtdec_locate_array(blob, node, "mux-lane-order",
-				    chip_cfg->comphy_lanes_count);
 
 	if (device_is_compatible(dev, "marvell,comphy-armada-3700"))
 		chip_cfg->ptr_comphy_chip_init = comphy_a3700_init;
@@ -124,7 +146,7 @@ static int comphy_probe(struct udevice *dev)
 	 * compatible node is found
 	 */
 	if (!chip_cfg->ptr_comphy_chip_init) {
-		dev_err(dev, "comphy: No compatible DT node found\n");
+		dev_err(&dev->dev, "comphy: No compatible DT node found\n");
 		return -ENODEV;
 	}
 
@@ -151,10 +173,6 @@ static int comphy_probe(struct udevice *dev)
 
 		lane++;
 	}
-
-	res = comphy_update_map(comphy_map_data, chip_cfg->comphy_lanes_count);
-	if (res < 0)
-		return res;
 
 	/* Save CP index for MultiCP devices (A8K) */
 	chip_cfg->cp_index = current_idx++;
@@ -189,5 +207,5 @@ U_BOOT_DRIVER(mvebu_comphy) = {
 	.id	= UCLASS_MISC,
 	.of_match = comphy_ids,
 	.probe	= comphy_probe,
-	.priv_auto	= sizeof(struct chip_serdes_phy_config),
+	.priv_auto_alloc_size = sizeof(struct chip_serdes_phy_config),
 };

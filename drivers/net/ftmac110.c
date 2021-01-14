@@ -1,20 +1,19 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Faraday 10/100Mbps Ethernet Controller
  *
  * (C) Copyright 2013 Faraday Technology
  * Dante Su <dantesu@faraday-tech.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <command.h>
-#include <log.h>
 #include <malloc.h>
 #include <net.h>
-#include <asm/cache.h>
 #include <linux/errno.h>
 #include <asm/io.h>
-#include <linux/dma-mapping.h>
+#include <asm/dma-mapping.h>
 
 #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII)
 #include <miiphy.h>
@@ -257,7 +256,7 @@ static int ftmac110_reset(struct eth_device *dev)
 	return 0;
 }
 
-static int ftmac110_probe(struct eth_device *dev, struct bd_info *bis)
+static int ftmac110_probe(struct eth_device *dev, bd_t *bis)
 {
 	debug("ftmac110: probe\n");
 
@@ -404,7 +403,7 @@ static int ftmac110_mdio_write(struct mii_dev *bus, int addr, int devad,
 
 #endif    /* #if defined(CONFIG_MII) || defined(CONFIG_CMD_MII) */
 
-int ftmac110_initialize(struct bd_info *bis)
+int ftmac110_initialize(bd_t *bis)
 {
 	int i, card_nr = 0;
 	struct eth_device *dev;

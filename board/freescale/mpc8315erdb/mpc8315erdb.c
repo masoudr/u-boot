@@ -1,18 +1,16 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2007 Freescale Semiconductor, Inc.
  *
  * Author: Scott Wood <scottwood@freescale.com>
  *         Dave Liu <daveliu@freescale.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
 #include <hwconfig.h>
 #include <i2c.h>
-#include <init.h>
-#include <net.h>
-#include <linux/delay.h>
-#include <linux/libfdt.h>
+#include <libfdt.h>
 #include <fdt_support.h>
 #include <pci.h>
 #include <mpc83xx.h>
@@ -161,7 +159,7 @@ void pci_init_board(void)
 }
 
 #if defined(CONFIG_OF_BOARD_SETUP)
-void fdt_tsec1_fixup(void *fdt, struct bd_info *bd)
+void fdt_tsec1_fixup(void *fdt, bd_t *bd)
 {
 	const char disabled[] = "disabled";
 	const char *path;
@@ -190,7 +188,7 @@ void fdt_tsec1_fixup(void *fdt, struct bd_info *bd)
 	do_fixup_by_path(fdt, path, "status", disabled, sizeof(disabled), 1);
 }
 
-int ft_board_setup(void *blob, struct bd_info *bd)
+int ft_board_setup(void *blob, bd_t *bd)
 {
 	ft_cpu_setup(blob, bd);
 #ifdef CONFIG_PCI
@@ -203,7 +201,7 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 }
 #endif
 
-int board_eth_init(struct bd_info *bis)
+int board_eth_init(bd_t *bis)
 {
 	cpu_eth_init(bis);	/* Initialize TSECs first */
 	return pci_eth_init(bis);
@@ -220,7 +218,7 @@ int checkboard(void)
 void board_init_f(ulong bootflag)
 {
 	board_early_init_f();
-	ns16550_init((struct ns16550 *)(CONFIG_SYS_IMMR + 0x4500),
+	NS16550_init((NS16550_t)(CONFIG_SYS_IMMR + 0x4500),
 		     CONFIG_SYS_NS16550_CLK / 16 / CONFIG_BAUDRATE);
 	puts("NAND boot... ");
 	timer_init();
@@ -240,9 +238,9 @@ void putc(char c)
 		return;
 
 	if (c == '\n')
-		ns16550_putc((struct ns16550 *)(CONFIG_SYS_IMMR + 0x4500), '\r');
+		NS16550_putc((NS16550_t)(CONFIG_SYS_IMMR + 0x4500), '\r');
 
-	ns16550_putc((struct ns16550 *)(CONFIG_SYS_IMMR + 0x4500), c);
+	NS16550_putc((NS16550_t)(CONFIG_SYS_IMMR + 0x4500), c);
 }
 
 #endif /* CONFIG_NAND_SPL */

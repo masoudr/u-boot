@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0+
 /*
  * Copyright (C) 2011 Freescale Semiconductor, Inc.
  * Jason Liu <r64343@freescale.com>
+ *
+ * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
-#include <init.h>
-#include <log.h>
 #include <asm/io.h>
 #include <asm/arch/imx-regs.h>
 #include <asm/arch/sys_proto.h>
@@ -14,14 +13,13 @@
 #include <asm/arch/clock.h>
 #include <asm/arch/iomux-mx53.h>
 #include <asm/arch/clock.h>
-#include <env.h>
 #include <linux/errno.h>
 #include <asm/mach-imx/mx5_video.h>
 #include <netdev.h>
 #include <i2c.h>
 #include <input.h>
 #include <mmc.h>
-#include <fsl_esdhc_imx.h>
+#include <fsl_esdhc.h>
 #include <asm/gpio.h>
 #include <power/pmic.h>
 #include <dialog_pmic.h>
@@ -32,6 +30,45 @@
 #define MX53LOCO_LCD_POWER		IMX_GPIO_NR(3, 24)
 
 DECLARE_GLOBAL_DATA_PTR;
+
+static uint32_t mx53_dram_size[2];
+
+phys_size_t get_effective_memsize(void)
+{
+	/*
+	 * WARNING: We must override get_effective_memsize() function here
+	 * to report only the size of the first DRAM bank. This is to make
+	 * U-Boot relocator place U-Boot into valid memory, that is, at the
+	 * end of the first DRAM bank. If we did not override this function
+	 * like so, U-Boot would be placed at the address of the first DRAM
+	 * bank + total DRAM size - sizeof(uboot), which in the setup where
+	 * each DRAM bank contains 512MiB of DRAM would result in placing
+	 * U-Boot into invalid memory area close to the end of the first
+	 * DRAM bank.
+	 */
+	return mx53_dram_size[0];
+}
+
+int dram_init(void)
+{
+	mx53_dram_size[0] = get_ram_size((void *)PHYS_SDRAM_1, 1 << 30);
+	mx53_dram_size[1] = get_ram_size((void *)PHYS_SDRAM_2, 1 << 30);
+
+	gd->ram_size = mx53_dram_size[0] + mx53_dram_size[1];
+
+	return 0;
+}
+
+int dram_init_banksize(void)
+{
+	gd->bd->bi_dram[0].start = PHYS_SDRAM_1;
+	gd->bd->bi_dram[0].size = mx53_dram_size[0];
+
+	gd->bd->bi_dram[1].start = PHYS_SDRAM_2;
+	gd->bd->bi_dram[1].size = mx53_dram_size[1];
+
+	return 0;
+}
 
 u32 get_board_rev(void)
 {
@@ -95,7 +132,7 @@ static void setup_iomux_fec(void)
 	imx_iomux_v3_setup_multiple_pads(fec_pads, ARRAY_SIZE(fec_pads));
 }
 
-#ifdef CONFIG_FSL_ESDHC_IMX
+#ifdef CONFIG_FSL_ESDHC
 struct fsl_esdhc_cfg esdhc_cfg[2] = {
 	{MMC_SDHC1_BASE_ADDR},
 	{MMC_SDHC3_BASE_ADDR},
@@ -124,7 +161,7 @@ int board_mmc_getcd(struct mmc *mmc)
 #define SD_PAD_CTRL		(PAD_CTL_HYS | PAD_CTL_PUS_47K_UP | \
 				 PAD_CTL_DSE_HIGH)
 
-int board_mmc_init(struct bd_info *bis)
+int board_mmc_init(bd_t *bis)
 {
 	static const iomux_v3_cfg_t sd1_pads[] = {
 		NEW_PAD_CTRL(MX53_PAD_SD1_CMD__ESDHC1_CMD, SD_CMD_PAD_CTRL),

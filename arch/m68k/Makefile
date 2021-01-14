@@ -1,4 +1,6 @@
-# SPDX-License-Identifier: GPL-2.0+
+#
+# SPDX-License-Identifier:	GPL-2.0+
+#
 
 head-y := arch/m68k/cpu/$(CPU)/start.o
 
@@ -30,6 +32,6 @@ ldflags-$(CONFIG_MCF547x_8x)	:= --got=single
 
 ifneq (,$(findstring -linux-,$(shell $(CC) --version)))
 ifneq (,$(findstring GOT,$(shell $(LD) --help)))
-KBUILD_LDFLAGS += $(ldflags-y)
+PLATFORM_LDFLAGS += $(ldflags-y)
 endif
 endif
